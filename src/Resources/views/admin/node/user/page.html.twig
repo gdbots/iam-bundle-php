@@ -1,0 +1,155 @@
+{% extends '@' ~ app_vendor ~ '_users/layout.html.twig' %}
+
+
+{% set html_title = pbj.get('title') ~ ' - User Details' %}
+{% set page_title = 'User Details' %}
+{#
+We intentionally load the pbjx_request BEFORE anything else so any lazy loaded nodes are in one batch.
+The first ncr_get_node() will trigger the lazy load the run.
+#}
+{% set history = pbjx_request(app_vendor ~ ':users:request:get-user-history-request', {'stream_id': 'user.history:' ~ pbj.get('_id'), 'forward': false}) %}
+{% set creator = ncr_get_node(pbj.get('creator_ref')) %}
+{% set updater = ncr_get_node(pbj.get('updater_ref')) %}
+
+
+{% block content %}
+  <div class="panel panel-flat">
+    <div class="panel-heading no-padding-bottom">
+      <h3 class="panel-title">
+        {{ pbj.get('title') }}
+        {% if pbj.get('is_staff') %} <span class="label label-info">Staff</span>{% endif %}
+        {% if pbj.get('is_blocked') %} <span class="label label-danger">Blocked</span>{% endif %}
+      </h3>
+      <p class="text-muted text-size-small">
+        <i class="glyphicon glyphicon-envelope"></i> <a href="mailto:{{ pbj.get('email') }}">{{ pbj.get('email') }}</a>
+        {% if pbj.has('networks') %}
+          {% for network, network_handle in pbj.get('networks') %}
+            <br><i class="icon icon-link icon-{{ network }}" title="{{ network }}"></i> {{ network_handle }}
+          {% endfor %}
+        {% endif %}
+        {% if pbj.has('phone') %}
+          {% for phone_type, phone in pbj.get('phone') %}
+            <br><i class="icon icon-phone" title="{{ phone_type }} phone"></i> {{ phone_type }}: {{ phone }}
+          {% endfor %}
+        {% endif %}
+      </p>
+    </div>
+
+    <div class="panel-body">
+      {% if pbj.has('roles') %}
+        <p><strong>ROLES:</strong> {{ pbj.get('roles')|join(',') }}</p>
+      {% endif %}
+
+      <p>
+        <a class="btn btn-default btn-sm" data-toggle="modal" data-target="#raw-data-modal"><span class="glyphicon glyphicon-eye-open"></span> &nbsp; View Raw Data</a>
+        <a class="btn btn-default btn-sm" href="{{ path('gdbots_iam_admin_user_update', {'user_id': pbj.get('_id')}) }}">Update User</a>
+      </p>
+
+      {% if pbj.has('tags') %}
+        <h5>Tags</h5>
+        <div class="table-responsive">
+          <table class="table table-bordered table-condensed">
+            <thead>
+            <tr>
+              <th>Name</th>
+              <th>Value</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for tag_name, tag_value in pbj.get('tags') %}
+              <tr>
+                <td class="col-md-2 col-sm-2">{{ tag_name }}</td>
+                <td>{{ tag_value }}</td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
+
+      {% if pbj.has('hashtags') %}
+        <div class="media-hashtags">
+          <ul class="list-inline media-hashtags">
+            {% for hashtag in pbj.get('hashtags') %}
+              <li><a href="{{ path('gdbots_iam_admin_user_search', {'q': '#' ~ hashtag}) }}" class="label label-rounded label-striped">#{{ hashtag }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+
+      {% if is_granted(app_vendor ~ ':users:command:grant-roles-to-user') %}
+        {% set available_roles = ['SUPER_USER', 'ARTICLE_MANAGER', 'VIDEO_MANAGER'] %}
+        <hr />
+        <div class="row">
+          <div class="col-md-3">
+            <form class="js-grant-roles-to-user">
+              <input type="hidden" name="node_ref" value="{{ app_vendor }}:user:{{ pbj.get('_id') }}"/>
+              <div class="form-group">
+                <select name="roles" multiple class="form-control">
+                  {% for role in available_roles %}
+                    {% if not pbj.isInSet('roles', role) %}
+                      <option value="{{ role }}">{{ role }}</option>
+                    {% endif %}
+                  {% endfor %}
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary btn-sm" data-loading-text="Granting roles...">Grant Roles to User</button>
+            </form>
+
+            <script>
+              var wbq = wbq || [];
+              wbq.push(function bindGrantRolesToUserForm() {
+                require(['behaviors/grant-roles-to-user']);
+              });
+            </script>
+          </div>
+
+          <div class="col-md-3">
+            <form class="js-revoke-roles-from-user">
+              <input type="hidden" name="node_ref" value="{{ app_vendor }}:user:{{ pbj.get('_id') }}"/>
+              <div class="form-group">
+                <select name="roles" multiple class="form-control">
+                  {% for role in available_roles %}
+                    {% if pbj.isInSet('roles', role) %}
+                      <option value="{{ role }}">{{ role }}</option>
+                    {% endif %}
+                  {% endfor %}
+                </select>
+              </div>
+              <button type="submit" class="btn btn-danger btn-sm" data-loading-text="Revoking roles...">Revoke Roles from User</button>
+            </form>
+
+            <script>
+              var wbq = wbq || [];
+              wbq.push(function bindRevokeRolesFromUserForm() {
+                require(['behaviors/revoke-roles-from-user']);
+              });
+            </script>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="panel-footer">
+      <ul>
+        <li><span class="created-at"><strong>Created:</strong> {{ pbj.get('created_at').toDateTime()|date('l F d, Y @ h:ia T') }}</span></li>
+      </ul>
+      {% if pbj.has('updated_at') %}
+        <ul class="pull-right">
+          <li>
+            <span class="updated-at"><strong>Updated:</strong> {{ pbj.get('updated_at').toDateTime()|date('l F d, Y @ h:ia T') }}</span>
+            {% if updater %}
+              <span class="updater-ref"><strong>By:</strong> {{ updater.get('title') }}</span>
+            {% endif %}
+          </li>
+        </ul>
+      {% endif %}
+    </div>
+  </div>
+
+  {% include '@components/raw_data_modal.html.twig' %}
+
+  {% if history and history.has('events') %}
+    {% include pbj_template(history, 'timeline', 'html', device_view) with {'pbj': history} %}
+  {% endif %}
+{% endblock %}

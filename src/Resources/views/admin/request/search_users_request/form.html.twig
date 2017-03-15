@@ -1,0 +1,79 @@
+{% form_theme pbj_form _self %}
+
+{% if pbj_form is not defined %}
+  {% set pbj_form = pbj_form_view('Gdbots\\Bundle\\IamBundle\\Form\\SearchUsersRequestType') %}
+{% endif %}
+
+{% block _search_users_request_q_row %}
+  {% if form is defined %}
+    <div class="form-group">
+      <div class="input-group">
+        <div class="has-feedback has-feedback-left">
+          {{ form_widget(form, {'attr': {'class': 'input-xlg', 'placeholder': 'Search'}}) }}
+          <div class="form-control-feedback"><i class="icon-search4 text-muted text-size-base"></i></div>
+        </div>
+        <div class="input-group-btn">
+          <button type="submit" class="btn btn-primary btn-xlg">Search</button>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}
+
+<div class="panel">
+  <div class="panel-body pb-5">
+    {{ form_errors(pbj_form) }}
+    {{ form_start(pbj_form, {'action': path('gdbots_iam_admin_user_search'), 'attr': {'id': pbj_form.vars.id}}) }}
+      {{ form_row(pbj_form.q) }}
+
+      <div class="row">
+        <div class="col-md-6 header-buttons-lt">
+          <span style="cursor:pointer;" data-toggle="collapse" data-target="#{{ pbj_form.vars.id }}-advanced"><i class="icon-menu7 position-left"></i> Advanced <span class="hidden-xs">options</span></span>
+        </div>
+      </div><!--/.row-->
+
+      <div id="{{ pbj_form.vars.id }}-advanced" class="collapse">
+        <div class="row" style="padding-top: 15px;">
+          <div class="col-md-3">
+            {{ form_row(pbj_form.created_after) }}
+          </div>
+
+          <div class="col-md-3">
+            {{ form_row(pbj_form.created_before) }}
+          </div>
+
+          <div class="col-md-3">
+            {{ form_row(pbj_form.updated_after) }}
+          </div>
+
+          <div class="col-md-3">
+            {{ form_row(pbj_form.updated_before) }}
+          </div>
+
+          <div class="col-md-3">
+            {{ form_row(pbj_form.sort) }}
+          </div>
+
+          <div class="col-md-3">
+            {{ form_row(pbj_form.count) }}
+          </div>
+
+          <div class="col-md-3">
+            {{ form_row(pbj_form.is_staff) }}
+          </div>
+
+          <div class="col-md-3">
+            {{ form_row(pbj_form.is_blocked) }}
+          </div>
+        </div><!--/.row-->
+
+        {{ form_widget(pbj_form.page, {'value': 1}) }}
+        <div style="display: none;">
+          {{ form_rest(pbj_form) }}
+        </div>
+      </div><!--/#{{ pbj_form.vars.id }}-advanced-->
+
+    {{ form_end(pbj_form) }}<!--/#{{ pbj_form.vars.id }}-->
+  </div>
+</div>
+
