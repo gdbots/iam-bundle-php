@@ -8,11 +8,8 @@
     "php": ">=7.1",
     "gdbots/app-bundle": "~0.1",
     "gdbots/iam": "dev-beta as 0.1.0",
-    "gdbots/ncr": "dev-beta as 0.1.0",
-    "gdbots/ncr-bundle": "dev-beta as 0.1.0",
-    "gdbots/pbjx": "dev-es as 1.0.0",
-    "gdbots/pbjx-bundle": "dev-beta as dev-master",
-    "gdbots/schemas": "dev-es as 1.0.0",
+    "gdbots/ncr-bundle": "~0.1",
+    "gdbots/pbjx-bundle": "dev-beta as 0.1.0",
     "symfony/symfony": "~3.2"
   },
   "require-dev": {
