@@ -12,7 +12,7 @@ use Gdbots\Bundle\PbjxBundle\Controller\PbjxAwareControllerTrait;
 use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbj\WellKnown\Identifier;
 use Gdbots\Schemas\Common\Enum\Trinary;
-use Gdbots\Schemas\Iam\Enum\SearchSort;
+use Gdbots\Schemas\Iam\Enum\SearchUsersSort;
 use Gdbots\Schemas\Iam\Mixin\CreateUser\CreateUser;
 use Gdbots\Schemas\Iam\Mixin\GetUserRequest\GetUserRequest;
 use Gdbots\Schemas\Iam\Mixin\GetUserRequest\GetUserRequestV1Mixin;
@@ -74,7 +74,7 @@ class UserController extends Controller
                     htmlspecialchars($command->get('node')->get('first_name')),
                     $command->get('node')->get('email')
                 ));
-                return $this->redirectToRoute('gdbots_iam_admin_user_search', ['sort' => SearchSort::CREATED_AT_DESC]);
+                return $this->redirectToRoute('gdbots_iam_admin_user_search', ['sort' => SearchUsersSort::CREATED_AT_DESC]);
             } catch (\Exception $e) {
                 $form->addError(new FormError($e->getMessage()));
             }
@@ -148,7 +148,7 @@ class UserController extends Controller
                     htmlspecialchars($command->get('new_node')->get('first_name')),
                     $command->get('new_node')->get('email')
                 ));
-                return $this->redirectToRoute('gdbots_iam_admin_user_search', ['sort' => SearchSort::UPDATED_AT_DESC]);
+                return $this->redirectToRoute('gdbots_iam_admin_user_search', ['sort' => SearchUsersSort::UPDATED_AT_DESC]);
             } catch (\Exception $e) {
                 $form->addError(new FormError($e->getMessage()));
             }
