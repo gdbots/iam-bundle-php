@@ -4,20 +4,19 @@ declare(strict_types = 1);
 namespace Gdbots\Bundle\IamBundle\Controller\Admin;
 
 use Gdbots\Bundle\AppBundle\Controller\DeviceViewRendererTrait;
-use Gdbots\Bundle\IamBundle\Form\CreateUserType;
-use Gdbots\Bundle\IamBundle\Form\SearchUsersRequestType;
-use Gdbots\Bundle\IamBundle\Form\UpdateUserType;
-use Gdbots\Bundle\IamBundle\Form\UserType;
+use Gdbots\Bundle\IamBundle\Form\CreateRoleType;
+use Gdbots\Bundle\IamBundle\Form\UpdateRoleType;
+use Gdbots\Bundle\IamBundle\Form\RoleType;
 use Gdbots\Bundle\PbjxBundle\Controller\PbjxAwareControllerTrait;
 use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbj\WellKnown\Identifier;
 use Gdbots\Schemas\Common\Enum\Trinary;
-use Gdbots\Schemas\Iam\Enum\SearchUsersSort;
-use Gdbots\Schemas\Iam\Mixin\CreateUser\CreateUser;
-use Gdbots\Schemas\Iam\Mixin\GetUserRequest\GetUserRequest;
-use Gdbots\Schemas\Iam\Mixin\GetUserRequest\GetUserRequestV1Mixin;
-use Gdbots\Schemas\Iam\Mixin\SearchUsersRequest\SearchUsersRequest;
-use Gdbots\Schemas\Iam\Mixin\UpdateUser\UpdateUser;
+use Gdbots\Schemas\Iam\Mixin\CreateRole\CreateRole;
+use Gdbots\Schemas\Iam\Mixin\GetRoleRequest\GetRoleRequest;
+use Gdbots\Schemas\Iam\Mixin\GetRoleRequest\GetRoleRequestV1Mixin;
+use Gdbots\Schemas\Iam\Mixin\ListAllRolesRequest;
+use Gdbots\Schemas\Iam\Mixin\UpdateRole\UpdateRole;
+use ListAllRolesType
 use Gdbots\Schemas\Ncr\NodeRef;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\Form\FormError;
@@ -34,9 +33,9 @@ class RoleController extends Controller
      *
      * @return Response
      */
-    public function searchAction(Request $request): Response
+    public function listAllAction(Request $request): Response
     {
-        $schema = SearchUsersRequestType::pbjSchema();
+        $schema = ListAllRolesType::
         $this->denyAccessUnlessGranted($schema->getCurie()->toString());
 
         $input = $request->query->all();

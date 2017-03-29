@@ -6,13 +6,8 @@
   "license": "Apache-2.0",
   "require": {
     "php": ">=7.1",
-    "gdbots/app-bundle": "~0.1",
     "gdbots/iam": "dev-power-rangers as 0.1.0",
-    "gdbots/ncr": "~0.1",
     "gdbots/ncr-bundle": "~0.1",
-    "gdbots/pbjx": "~2.0",
-    "gdbots/pbjx-bundle": "dev-beta as 0.1",
-    "gdbots/schemas": "dev-master as 1.1",
     "symfony/symfony": "~3.2"
   },
   "require-dev": {
