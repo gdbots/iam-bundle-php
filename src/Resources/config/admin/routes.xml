@@ -21,4 +21,21 @@
     <requirement key="user_id">[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}</requirement>
   </route>
 
+  <route id="gdbots_iam_admin_role_search" path="/search">
+    <default key="_controller">gdbots_iam.admin.role_controller:searchAction</default>
+  </route>
+
+  <route id="gdbots_iam_admin_role_create" path="/create">
+    <default key="_controller">gdbots_iam.admin.role_controller:createAction</default>
+  </route>
+
+  <route id="gdbots_iam_admin_role_show" path="/{role_id}">
+    <default key="_controller">gdbots_iam.admin.role_controller:showAction</default>
+    <requirement key="user_id">[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}</requirement>
+  </route>
+
+  <route id="gdbots_iam_admin_role_update" path="/{role_id}/update">
+    <default key="_controller">gdbots_iam.admin.role_controller:updateAction</default>
+    <requirement key="user_id">[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}</requirement>
+  </route>
 </routes>

@@ -5,6 +5,7 @@
 
   <parameters>
     <parameter key="gdbots_iam.admin.user_controller.class">Gdbots\Bundle\IamBundle\Controller\Admin\UserController</parameter>
+    <parameter key="gdbots_iam.admin.role_controller.class">Gdbots\Bundle\IamBundle\Controller\Admin\RoleController</parameter>
     <parameter key="gdbots_iam.user_projector.class">Gdbots\Iam\UserProjector</parameter>
   </parameters>
 
@@ -15,9 +16,18 @@
         <argument type="service" id="service_container" />
       </call>
     </service>
+    <service id="gdbots_iam.admin.role_controller" class="%gdbots_iam.admin.role_controller.class%">
+      <call method="setContainer">
+        <argument type="service" id="service_container" />
+      </call>
+    </service>
 
     <!-- validators -->
     <service id="gdbots_iam.unique_user_validator" class="Gdbots\Iam\Validator\UniqueUserValidator">
+      <tag name="pbjx.event_subscriber"/>
+      <tag name="pbjx.validator"/>
+    </service>
+    <service id="gdbots_iam.unique_role_validator" class="Gdbots\Iam\Validator\UniqueRoleValidator">
       <tag name="pbjx.event_subscriber"/>
       <tag name="pbjx.validator"/>
     </service>
@@ -39,6 +49,22 @@
       <tag name="pbjx.handler" alias="%app_vendor%_iam.update_user_handler"/>
     </service>
 
+    <service id="gdbots_iam.delete_user_handler" class="Gdbots\Iam\DeleteUserHandler">
+      <tag name="pbjx.handler" alias="%app_vendor%_iam.delete_user_handler"/>
+    </service>
+
+    <service id="gdbots_iam.create_role_handler" class="Gdbots\Iam\CreateRoleHandler">
+      <tag name="pbjx.handler" alias="%app_vendor%_iam.create_role_handler"/>
+    </service>
+
+    <service id="gdbots_iam.delete_role_handler" class="Gdbots\Iam\DeleteRoleHandler">
+      <tag name="pbjx.handler" alias="%app_vendor%_iam.grant_roles_to_user_handler"/>
+    </service>
+
+    <service id="gdbots_iam.update_role_handler" class="Gdbots\Iam\UpdateRoleHandler">
+      <tag name="pbjx.handler" alias="%app_vendor%_iam.update_role_handler"/>
+    </service>
+
     <!-- request handlers -->
     <service id="gdbots_iam.get_user_history_request_handler" class="Gdbots\Iam\GetUserHistoryRequestHandler">
       <tag name="pbjx.handler" alias="%app_vendor%_iam.get_user_history_request_handler"/>
@@ -49,8 +75,24 @@
       <tag name="pbjx.handler" alias="%app_vendor%_iam.search_users_request_handler"/>
     </service>
 
+    <service id="gdbots_iam.get_role_history_request_handler" class="Gdbots\Iam\GetRoleHistoryRequestHandler">
+      <tag name="pbjx.handler" alias="%app_vendor%_iam.get_role_history_request_handler"/>
+    </service>
+
+    <service id="gdbots_iam.list_all_roles_request_handler" class="Gdbots\Iam\ListAllRolesRequestHandler">
+      <argument type="service" id="ncr_search"/>
+      <tag name="pbjx.handler" alias="%app_vendor%_iam.list_all_roles_request_handler"/>
+    </service>
+
     <!-- projectors -->
     <service id="gdbots_iam.user_projector" class="%gdbots_iam.user_projector.class%">
+      <argument type="service" id="ncr"/>
+      <argument type="service" id="ncr_search"/>
+      <tag name="pbjx.event_listener" event="%app_vendor%:iam:event:*" method="onEvent"/>
+      <tag name="pbjx.projector"/>
+    </service>
+
+    <service id="gdbots_iam.role_projector" class="%gdbots_iam.role_projector.class%">
       <argument type="service" id="ncr"/>
       <argument type="service" id="ncr_search"/>
       <tag name="pbjx.event_listener" event="%app_vendor%:iam:event:*" method="onEvent"/>
