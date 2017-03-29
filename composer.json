@@ -17,7 +17,7 @@
   },
   "require-dev": {
     "composer/composer": "1.0.*@dev",
-    "phpunit/phpunit": "~4.3",
+    "phpunit/phpunit": "~6.0",
     "hwi/oauth-bundle": "~0.5"
   },
   "autoload": {
