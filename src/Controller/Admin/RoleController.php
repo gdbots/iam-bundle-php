@@ -33,27 +33,6 @@ class RoleController extends Controller
      *
      * @return Response
      */
-    public function listAllAction(Request $request): Response
-    {
-        $schema = MessageResolver::findOneUsingMixin(GetRoleRequestV1Mixin::create(), 'iam', 'request');
-        $this->denyAccessUnlessGranted($schema->getCurie()->toString());
-
-        $roleSchema = RoleType::pbjSchema();
-        $nodeRef = NodeRef::fromString("{$roleSchema->getQName()}:{$request->attributes->get('role_id')}");
-
-        /** @var GetUserRequest $getRoleRequest */
-        $getRoleRequest = $schema->createMessage()
-            ->set('node_ref', $nodeRef)
-            ->set('consistent_read', true);
-
-        return $this->renderPbj($this->getPbjx()->request($getRoleRequest)->get('node'));
-    }
-
-    /**
-     * @param Request $request
-     *
-     * @return Response
-     */
     public function createAction(Request $request): Response
     {
         $schema = CreateRoleType::pbjSchema();
@@ -70,10 +49,10 @@ class RoleController extends Controller
                 $this->addFlash('success', sprintf(
                     'Role <a href="%s" class="alert-link">%s</a> with id "%s" was created.',
                     $this->generateUrl('gdbots_iam_admin_role_show', ['role_id' => $command->get('node')->get('_id')]),
-                    htmlspecialchars($command->get('node')->get('first_name')),
-                    $command->get('node')->get('name')
+                    htmlspecialchars($command->get('node')->get('_id')),
+                    $command->get('node')->get('_id')
                 ));
-                return $this->redirectToRoute('gdbots_iam_admin_role_search', ['sort' => SearchUsersSort::CREATED_AT_DESC]);
+                return $this->redirectToRoute('gdbots_iam_admin_role_show', ['role_id' => $id->toString()]);
             } catch (\Exception $e) {
                 $form->addError(new FormError($e->getMessage()));
             }
@@ -144,10 +123,10 @@ class RoleController extends Controller
                 $this->addFlash('success', sprintf(
                     'Role <a href="%s" class="alert-link">%s</a> with id "%s" was updated.',
                     $this->generateUrl('gdbots_iam_admin_role_show', ['role_id' => $id->toString()]),
-                    htmlspecialchars($command->get('new_node')->get('label')),
-                    $command->get('new_node')->get('label')
+                    htmlspecialchars($command->get('new_node')->get('_id')),
+                    $command->get('new_node')->get('_id')
                 ));
-                return $this->redirectToRoute('gdbots_iam_admin_role_show', ['role_id' => $id]);
+                return $this->redirectToRoute('gdbots_iam_admin_role_show', ['role_id' => $id->toString()]);
             } catch (\Exception $e) {
                 $form->addError(new FormError($e->getMessage()));
             }
