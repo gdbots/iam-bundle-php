@@ -6,6 +6,8 @@
   <parameters>
     <parameter key="gdbots_iam.admin.user_controller.class">Gdbots\Bundle\IamBundle\Controller\Admin\UserController</parameter>
     <parameter key="gdbots_iam.admin.role_controller.class">Gdbots\Bundle\IamBundle\Controller\Admin\RoleController</parameter>
+
+    <parameter key="gdbots_iam.role_projector.class">Gdbots\Iam\RoleProjector</parameter>
     <parameter key="gdbots_iam.user_projector.class">Gdbots\Iam\UserProjector</parameter>
   </parameters>
 
