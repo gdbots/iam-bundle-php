@@ -68,6 +68,10 @@
     </service>
 
     <!-- request handlers -->
+    <service id="gdbots_iam.get_user_request_handler" class="Gdbots\Iam\GetUserRequestHandler">
+      <tag name="pbjx.handler" alias="%app_vendor%_iam.get_user_request_handler"/>
+    </service>
+
     <service id="gdbots_iam.get_user_history_request_handler" class="Gdbots\Iam\GetUserHistoryRequestHandler">
       <tag name="pbjx.handler" alias="%app_vendor%_iam.get_user_history_request_handler"/>
     </service>
