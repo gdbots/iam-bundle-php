@@ -11,12 +11,12 @@ use Gdbots\Bundle\PbjxBundle\Controller\PbjxAwareControllerTrait;
 use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbj\WellKnown\Identifier;
 use Gdbots\Schemas\Common\Enum\Trinary;
+use Gdbots\Schemas\Iam\Enum\SearchUsersSort;
 use Gdbots\Schemas\Iam\Mixin\CreateRole\CreateRole;
 use Gdbots\Schemas\Iam\Mixin\GetRoleRequest\GetRoleRequest;
 use Gdbots\Schemas\Iam\Mixin\GetRoleRequest\GetRoleRequestV1Mixin;
 use Gdbots\Schemas\Iam\Mixin\ListAllRolesRequest;
 use Gdbots\Schemas\Iam\Mixin\UpdateRole\UpdateRole;
-use ListAllRolesType
 use Gdbots\Schemas\Ncr\NodeRef;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\Form\FormError;
@@ -35,18 +35,18 @@ class RoleController extends Controller
      */
     public function listAllAction(Request $request): Response
     {
-        $schema = ListAllRolesType::
+        $schema = MessageResolver::findOneUsingMixin(GetRoleRequestV1Mixin::create(), 'iam', 'request');
         $this->denyAccessUnlessGranted($schema->getCurie()->toString());
 
-        $input = $request->query->all();
-        $input['is_blocked'] = $request->query->getInt('is_blocked', Trinary::FALSE_VAL);
+        $roleSchema = RoleType::pbjSchema();
+        $nodeRef = NodeRef::fromString("{$roleSchema->getQName()}:{$request->attributes->get('role_id')}");
 
-        $form = $this->handlePbjForm($request, SearchUsersRequestType::class, $input);
-        /** @var SearchUsersRequest $searchRequest */
-        $searchRequest = $schema->createMessage($form->getData());
-        $searchResponse = $this->getPbjx()->request($searchRequest);
+        /** @var GetUserRequest $getRoleRequest */
+        $getRoleRequest = $schema->createMessage()
+            ->set('node_ref', $nodeRef)
+            ->set('consistent_read', true);
 
-        return $this->renderPbjForm($searchResponse, $form->createView());
+        return $this->renderPbj($this->getPbjx()->request($getRoleRequest)->get('node'));
     }
 
     /**
@@ -56,11 +56,11 @@ class RoleController extends Controller
      */
     public function createAction(Request $request): Response
     {
-        $schema = CreateUserType::pbjSchema();
+        $schema = CreateRoleType::pbjSchema();
         $this->denyAccessUnlessGranted($schema->getCurie()->toString());
 
-        $form = $this->handlePbjForm($request, CreateUserType::class);
-        /** @var CreateUser $command */
+        $form = $this->handlePbjForm($request, CreateRoleType::class);
+        /** @var CreateRole $command */
         $command = $schema->createMessage($form->getData());
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -68,12 +68,12 @@ class RoleController extends Controller
                 $this->getPbjx()->send($command);
                 // fixme: move to event listener to handle flash messages (create symfony events)
                 $this->addFlash('success', sprintf(
-                    'User <a href="%s" class="alert-link">%s</a> with email "%s" was created.',
-                    $this->generateUrl('gdbots_iam_admin_user_show', ['user_id' => $command->get('node')->get('_id')]),
+                    'Role <a href="%s" class="alert-link">%s</a> with id "%s" was created.',
+                    $this->generateUrl('gdbots_iam_admin_role_show', ['role_id' => $command->get('node')->get('_id')]),
                     htmlspecialchars($command->get('node')->get('first_name')),
-                    $command->get('node')->get('email')
+                    $command->get('node')->get('name')
                 ));
-                return $this->redirectToRoute('gdbots_iam_admin_user_search', ['sort' => SearchUsersSort::CREATED_AT_DESC]);
+                return $this->redirectToRoute('gdbots_iam_admin_role_search', ['sort' => SearchUsersSort::CREATED_AT_DESC]);
             } catch (\Exception $e) {
                 $form->addError(new FormError($e->getMessage()));
             }
@@ -89,18 +89,18 @@ class RoleController extends Controller
      */
     public function showAction(Request $request): Response
     {
-        $schema = MessageResolver::findOneUsingMixin(GetUserRequestV1Mixin::create(), 'iam', 'request');
+        $schema = MessageResolver::findOneUsingMixin(GetRoleRequestV1Mixin::create(), 'iam', 'request');
         $this->denyAccessUnlessGranted($schema->getCurie()->toString());
 
-        $userSchema = UserType::pbjSchema();
-        $nodeRef = NodeRef::fromString("{$userSchema->getQName()}:{$request->attributes->get('user_id')}");
+        $roleSchema = RoleType::pbjSchema();
+        $nodeRef = NodeRef::fromString("{$roleSchema->getQName()}:{$request->attributes->get('role_id')}");
 
-        /** @var GetUserRequest $getUserRequest */
-        $getUserRequest = $schema->createMessage()
+        /** @var GetUserRequest $getRoleRequest */
+        $getRoleRequest = $schema->createMessage()
             ->set('node_ref', $nodeRef)
             ->set('consistent_read', true);
 
-        return $this->renderPbj($this->getPbjx()->request($getUserRequest)->get('node'));
+        return $this->renderPbj($this->getPbjx()->request($getRoleRequest)->get('node'));
     }
 
     /**
@@ -110,28 +110,28 @@ class RoleController extends Controller
      */
     public function updateAction(Request $request): Response
     {
-        $schema = UpdateUserType::pbjSchema();
+        $schema = UpdateRoleType::pbjSchema();
         $this->denyAccessUnlessGranted($schema->getCurie()->toString());
 
-        $getUserSchema = MessageResolver::findOneUsingMixin(GetUserRequestV1Mixin::create(), 'iam', 'request');
-        $userSchema = UserType::pbjSchema();
-        $nodeRef = NodeRef::fromString("{$userSchema->getQName()}:{$request->attributes->get('user_id')}");
-        $userIdField = $userSchema->getField('_id');
+        $getRoleSchema = MessageResolver::findOneUsingMixin(GetRoleRequestV1Mixin::create(), 'iam', 'request');
+        $roleSchema = RoleType::pbjSchema();
+        $nodeRef = NodeRef::fromString("{$userSchema->getQName()}:{$request->attributes->get('role_id')}");
+        $roleIdField = $roleSchema->getField('_id');
         /** @var Identifier $idClass */
-        $idClass = $userIdField->getClassName();
+        $idClass = $roleIdField->getClassName();
         $id = $idClass::fromString($nodeRef->getId());
         $input = [];
 
         if ($request->isMethodSafe()) {
-            /** @var GetUserRequest $getUserRequest */
-            $getUserRequest = $getUserSchema->createMessage()
+            /** @var GetRoleRequest $getUserRequest */
+            $getUserRequest = $getRoleSchema->createMessage()
                 ->set('node_ref', $nodeRef)
                 ->set('consistent_read', true);
             $input['new_node'] = $this->getPbjx()->request($getUserRequest)->get('node')->toArray();
         }
 
         $form = $this->handlePbjForm($request, UpdateUserType::class, $input);
-        /** @var UpdateUser $command */
+        /** @var UpdateRole $command */
         $command = $schema->createMessage($form->getData());
         $command
             ->set('node_ref', $nodeRef)
@@ -142,12 +142,12 @@ class RoleController extends Controller
             try {
                 $this->getPbjx()->send($command);
                 $this->addFlash('success', sprintf(
-                    'User <a href="%s" class="alert-link">%s</a> with email "%s" was updated.',
-                    $this->generateUrl('gdbots_iam_admin_user_show', ['user_id' => $id->toString()]),
-                    htmlspecialchars($command->get('new_node')->get('first_name')),
-                    $command->get('new_node')->get('email')
+                    'Role <a href="%s" class="alert-link">%s</a> with id "%s" was updated.',
+                    $this->generateUrl('gdbots_iam_admin_role_show', ['role_id' => $id->toString()]),
+                    htmlspecialchars($command->get('new_node')->get('label')),
+                    $command->get('new_node')->get('label')
                 ));
-                return $this->redirectToRoute('gdbots_iam_admin_user_search', ['sort' => SearchUsersSort::UPDATED_AT_DESC]);
+                return $this->redirectToRoute('gdbots_iam_admin_role_show', ['role_id' => $id]);
             } catch (\Exception $e) {
                 $form->addError(new FormError($e->getMessage()));
             }
