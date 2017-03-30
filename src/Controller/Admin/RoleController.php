@@ -142,4 +142,14 @@ class RoleController extends Controller
     {
        return null;
     }
+
+    /**
+     * @param Request $request
+     *
+     * @return Response
+     */
+    public function deleteAction(Request $request): Response
+    {
+
+    }
 }
