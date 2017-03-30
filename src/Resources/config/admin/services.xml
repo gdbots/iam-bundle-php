@@ -77,11 +77,6 @@
       <tag name="pbjx.handler" alias="%app_vendor%_iam.get_user_history_request_handler"/>
     </service>
 
-    <service id="gdbots_iam.get_user_batch_request_handler" class="Gdbots\Iam\GetUserBatchRequestHandler">
-      <argument type="service" id="ncr"/>
-      <tag name="pbjx.handler" alias="%app_vendor%_iam.get_user_batch_request_handler"/>
-    </service>
-
     <service id="gdbots_iam.search_users_request_handler" class="Gdbots\Iam\SearchUsersRequestHandler">
       <argument type="service" id="ncr_search"/>
       <tag name="pbjx.handler" alias="%app_vendor%_iam.search_users_request_handler"/>
@@ -94,11 +89,6 @@
 
     <service id="gdbots_iam.get_role_history_request_handler" class="Gdbots\Iam\GetRoleHistoryRequestHandler">
       <tag name="pbjx.handler" alias="%app_vendor%_iam.get_role_history_request_handler"/>
-    </service>
-
-    <service id="gdbots_iam.get_role_batch_request_handler" class="Gdbots\Iam\GetRoleBatchRequestHandler">
-      <argument type="service" id="ncr"/>
-      <tag name="pbjx.handler" alias="%app_vendor%_iam.get_role_batch_request_handler"/>
     </service>
 
     <service id="gdbots_iam.list_all_roles_request_handler" class="Gdbots\Iam\ListAllRolesRequestHandler">
