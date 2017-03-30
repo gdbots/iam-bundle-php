@@ -155,4 +155,14 @@ class RoleController extends Controller
 
         return $this->renderPbjForm($command, $form->createView());
     }
+
+    /**
+     * @param Request $request
+     *
+     * @return Response
+     */
+    public function listAction(Request $request): Response
+    {
+       return null;
+    }
 }

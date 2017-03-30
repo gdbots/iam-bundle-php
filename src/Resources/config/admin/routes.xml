@@ -25,6 +25,10 @@
     <default key="_controller">gdbots_iam.admin.user_controller:deleteAction</default>
   </route>
 
+  <route id="gdbots_iam_admin_role_create" path="/roles">
+    <default key="_controller">gdbots_iam.admin.role_controller:listAction</default>
+  </route>
+
   <route id="gdbots_iam_admin_role_create" path="/roles/create">
     <default key="_controller">gdbots_iam.admin.role_controller:createAction</default>
   </route>
