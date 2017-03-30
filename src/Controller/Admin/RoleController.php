@@ -10,8 +10,6 @@ use Gdbots\Bundle\IamBundle\Form\RoleType;
 use Gdbots\Bundle\PbjxBundle\Controller\PbjxAwareControllerTrait;
 use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbj\WellKnown\Identifier;
-use Gdbots\Schemas\Common\Enum\Trinary;
-use Gdbots\Schemas\Iam\Enum\SearchUsersSort;
 use Gdbots\Schemas\Iam\Mixin\CreateRole\CreateRole;
 use Gdbots\Schemas\Iam\Mixin\GetRoleRequest\GetRoleRequest;
 use Gdbots\Schemas\Iam\Mixin\GetRoleRequest\GetRoleRequestV1Mixin;
@@ -52,7 +50,7 @@ class RoleController extends Controller
                     htmlspecialchars($command->get('node')->get('_id')),
                     $command->get('node')->get('_id')
                 ));
-                return $this->redirectToRoute('gdbots_iam_admin_role_show', ['role_id' => $id->toString()]);
+                return $this->redirectToRoute('gdbots_iam_admin_list_role');
             } catch (\Exception $e) {
                 $form->addError(new FormError($e->getMessage()));
             }
@@ -74,7 +72,7 @@ class RoleController extends Controller
         $roleSchema = RoleType::pbjSchema();
         $nodeRef = NodeRef::fromString("{$roleSchema->getQName()}:{$request->attributes->get('role_id')}");
 
-        /** @var GetUserRequest $getRoleRequest */
+        /** @var GetRoleRequest $getRoleRequest */
         $getRoleRequest = $schema->createMessage()
             ->set('node_ref', $nodeRef)
             ->set('consistent_read', true);
