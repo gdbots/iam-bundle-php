@@ -92,7 +92,7 @@ class RoleController extends Controller
 
         $getRoleSchema = MessageResolver::findOneUsingMixin(GetRoleRequestV1Mixin::create(), 'iam', 'request');
         $roleSchema = RoleType::pbjSchema();
-        $nodeRef = NodeRef::fromString("{$userSchema->getQName()}:{$request->attributes->get('role_id')}");
+        $nodeRef = NodeRef::fromString("{$roleSchema->getQName()}:{$request->attributes->get('role_id')}");
         $roleIdField = $roleSchema->getField('_id');
         /** @var Identifier $idClass */
         $idClass = $roleIdField->getClassName();
@@ -100,14 +100,14 @@ class RoleController extends Controller
         $input = [];
 
         if ($request->isMethodSafe()) {
-            /** @var GetRoleRequest $getUserRequest */
-            $getUserRequest = $getRoleSchema->createMessage()
+            /** @var GetRoleRequest $getRoleRequest */
+            $getRoleRequest = $getRoleSchema->createMessage()
                 ->set('node_ref', $nodeRef)
                 ->set('consistent_read', true);
-            $input['new_node'] = $this->getPbjx()->request($getUserRequest)->get('node')->toArray();
+            $input['new_node'] = $this->getPbjx()->request($getRoleRequest)->get('node')->toArray();
         }
 
-        $form = $this->handlePbjForm($request, UpdateUserType::class, $input);
+        $form = $this->handlePbjForm($request, UpdateRoleType::class, $input);
         /** @var UpdateRole $command */
         $command = $schema->createMessage($form->getData());
         $command
