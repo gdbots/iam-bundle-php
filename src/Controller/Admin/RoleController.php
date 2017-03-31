@@ -13,7 +13,8 @@ use Gdbots\Pbj\WellKnown\Identifier;
 use Gdbots\Schemas\Iam\Mixin\CreateRole\CreateRole;
 use Gdbots\Schemas\Iam\Mixin\GetRoleRequest\GetRoleRequest;
 use Gdbots\Schemas\Iam\Mixin\GetRoleRequest\GetRoleRequestV1Mixin;
-use Gdbots\Schemas\Iam\Mixin\ListAllRolesRequest;
+use Gdbots\Schemas\Iam\Mixin\ListAllRolesRequest\ListAllRolesRequest;
+use Gdbots\Schemas\Iam\Mixin\ListAllRolesRequest\ListAllRolesRequestV1Mixin;
 use Gdbots\Schemas\Iam\Mixin\UpdateRole\UpdateRole;
 use Gdbots\Schemas\Ncr\NodeRef;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -140,16 +141,12 @@ class RoleController extends Controller
      */
     public function listAction(Request $request): Response
     {
-       return null;
-    }
+        $schema = MessageResolver::findOneUsingMixin(ListAllRolesRequestV1Mixin::create(), 'iam', 'request');
+        $this->denyAccessUnlessGranted($schema->getCurie()->toString());
 
-    /**
-     * @param Request $request
-     *
-     * @return Response
-     */
-    public function deleteAction(Request $request): Response
-    {
+        /** @var ListAllRolesRequest $listAllRolesRequest */
+        $listAllRolesRequest = $schema->createMessage();
 
+        return $this->renderPbj($this->getPbjx()->request($listAllRolesRequest)->get('roles'));
     }
 }
