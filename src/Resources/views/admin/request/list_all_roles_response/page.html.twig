@@ -1,0 +1,52 @@
+{% extends '@' ~ app_vendor ~ '_users/layout.html.twig' %}
+
+
+{% set html_title = 'All Roles' %}
+{% set page_title = 'All Roles' %}
+{% set can_update = is_granted(app_vendor ~ ':role:request:list-all-roles') %}
+
+
+{% block content %}
+  {% include pbj_template(pbj.get('ctx_request'), 'form', 'html', device_view) with {'pbj': pbj.get('ctx_request')} %}
+  <p class="text-muted text-size-small">Found <strong>{{ pbj.get('total')|number_format }}</strong> records in <strong>{{ pbj.get('time_taken') }}</strong> milliseconds.</p>
+
+  <div class="panel panel-flat">
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+        <tr>
+          <th>&nbsp;</th>
+          <th>Id</th>
+          <th>Allowed</th>
+          <th>Denied</th>
+          <th>Created At</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for role in pbj.get('roles') %}
+          <tr{% if 'deleted' == role.get('status') %} class="warning"{% endif %}>
+            <td nowrap>
+              <a href="{{ path('gdbots_iam_admin_role_show', {'role_id': role.get('_id')}) }}" title="view"><span class="glyphicon glyphicon-eye-open"></span></a>
+              {% if can_update %}&nbsp;<a href="{{ path('gdbots_iam_admin_role_update', {'role_id': role.get('_id')}) }}" title="edit"><span class="glyphicon glyphicon-edit"></span></a>{% endif %}
+            </td>
+            <td>
+              {{ role.get('_id') }}
+            </td>
+            <td>
+              {% for allowed in role.get('allowed') %}
+                <span>{{ allowed }}</span>
+            </td>
+            <td>
+              {% for denied in role.get('denied') %}
+              <span>{{ denied }}</span>
+            </td>
+            <td>{{ role.get('created_at').toDateTime()|date('F d, Y @ h:ia T') }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% include '@components/pager.html.twig' %}
+{% endblock %}
