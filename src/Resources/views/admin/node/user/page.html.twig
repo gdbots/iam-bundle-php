@@ -78,7 +78,7 @@ The first ncr_get_node() will trigger the lazy load the run.
       {% endif %}
 
       {% if is_granted(app_vendor ~ ':users:command:grant-roles-to-user') %}
-        {% set available_roles = ['SUPER_USER', 'ARTICLE_MANAGER', 'VIDEO_MANAGER'] %}
+        {% set available_roles = pbjx_request(app_vendor ~ ':roles:request:list-all-roles-request') %}
         <hr />
         <div class="row">
           <div class="col-md-3">

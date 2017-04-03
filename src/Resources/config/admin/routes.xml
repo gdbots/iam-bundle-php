@@ -21,10 +21,6 @@
     <requirement key="user_id">[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}</requirement>
   </route>
 
-  <route id="gdbots_iam_admin_user_delete" path="/users/{user_id}/delete">
-    <default key="_controller">gdbots_iam.admin.user_controller:deleteAction</default>
-  </route>
-
   <route id="gdbots_iam_admin_list_role" path="/roles">
     <default key="_controller">gdbots_iam.admin.role_controller:listAction</default>
   </route>
@@ -41,9 +37,5 @@
   <route id="gdbots_iam_admin_role_update" path="/roles/{role_id}/update">
     <default key="_controller">gdbots_iam.admin.role_controller:updateAction</default>
     <requirement key="role_id">[a-z0-9\-\]+</requirement>
-  </route>
-
-  <route id="gdbots_iam_admin_role_delete" path="/roles/{role_id}/delete">
-    <default key="_controller">gdbots_iam.admin.role_controller:deleteAction</default>
   </route>
 </routes>

@@ -35,10 +35,12 @@
             <td>
               {% for allowed in role.get('allowed') %}
                 <span>{{ allowed }}</span>
+              {% endfor %}
             </td>
             <td>
               {% for denied in role.get('denied') %}
               <span>{{ denied }}</span>
+              {% endfor %}
             </td>
             <td>{{ role.get('created_at').toDateTime()|date('F d, Y @ h:ia T') }}</td>
           </tr>
