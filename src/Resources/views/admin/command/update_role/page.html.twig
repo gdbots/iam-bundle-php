@@ -1,0 +1,57 @@
+{% extends '@' ~ app_vendor ~ '_roles/layout.html.twig' %}
+
+
+{% set html_title = pbj.get('new_node').get('_id') ~ ' - Update Role' %}
+{% set page_title = html_title %}
+
+
+{% block content %}
+  <div class="panel">
+    <div class="panel-body xpb-5">
+      {{ form_errors(pbj_form) }}
+      {{ form_start(pbj_form, {'attr': {'id': pbj_form.vars.id}}) }}
+
+      <fieldset>
+        <legend><strong>Role Info</strong></legend>
+        <div class="row">
+          <div class="col-md-6">
+            {{ form_row(pbj_form.new_node._id) }}
+          </div>
+        </div>
+
+        {% if pbj.has('allowed') %}
+          <div class="row">
+            <p><strong>ALLOWED:</strong></p>
+            <div class="col-md-6">
+            {% for allow in pbj_form.new_node.allowed %}
+              {{ form_row(allow) }}
+            {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+
+        {% if pbj.has('denied') %}
+          <div class="row">
+            <p><strong>DENIED:</strong></p>
+            <div class="col-md-6">
+              {% for deny in pbj_form.new_node.denied %}
+                {{ form_row(deny) }}
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+      </fieldset>
+
+      <fieldset>
+        <legend><strong>&nbsp;</strong></legend>
+        <button type="submit" class="btn btn-primary btn-xlg">Update User</button>
+        <a href="{{ path('gdbots_iam_admin_role_show', {'role_id': pbj.get('new_node').get('_id')}) }}" class="btn btn-link">Cancel</a>
+      </fieldset>
+
+      <div style="display: none;">
+        {{ form_rest(pbj_form) }}
+      </div>
+      {{ form_end(pbj_form) }}<!--/#{{ pbj_form.vars.id }}-->
+    </div>
+  </div>
+{% endblock %}
