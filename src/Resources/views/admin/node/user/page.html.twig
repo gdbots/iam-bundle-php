@@ -87,7 +87,7 @@ The first ncr_get_node() will trigger the lazy load the run.
               <div class="form-group">
                 <select name="roles" multiple class="form-control">
                   {% for node_ref, role in available_roles %}
-                    {% if not pbj.isInMap('roles', node_ref) %}
+                    {% if not pbj.isInSet('roles', node_ref) %}
                       <option value="{{ node_ref }}">{{ role['_id'] }}</option>
                     {% endif %}
                   {% endfor %}
@@ -110,7 +110,7 @@ The first ncr_get_node() will trigger the lazy load the run.
               <div class="form-group">
                 <select name="roles" multiple class="form-control">
                   {% for node_ref, role in available_roles %}
-                    {% if pbj.isInMap('roles', node_ref) %}
+                    {% if pbj.isInSet('roles', node_ref) %}
                       <option value="{{ node_ref }}">{{ role['_id'] }}</option>
                     {% endif %}
                   {% endfor %}

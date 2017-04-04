@@ -1,4 +1,4 @@
-{% extends '@' ~ app_vendor ~ '_users/layout.html.twig' %}
+{% extends '@' ~ app_vendor ~ '_roles/layout.html.twig' %}
 
 
 {% set html_title = 'Create Role' %}
@@ -12,35 +12,37 @@
       {{ form_start(pbj_form, {'attr': {'id': pbj_form.vars.id}}) }}
 
       <fieldset>
-        <legend><strong>User Info</strong></legend>
+        <legend><strong>Role Info</strong></legend>
         <div class="row">
           <div class="col-md-6">
-            {{ form_row(pbj_form.node.first_name) }}
+            {{ form_row(pbj_form.node._id) }}
           </div>
-
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend><strong>Allowed Permissions</strong></legend>
+        <div class="row">
           <div class="col-md-6">
-            {{ form_row(pbj_form.node.last_name) }}
-          </div>
-
-          <div class="col-md-6">
-            {{ form_row(pbj_form.node.email) }}
+            {{ form_row(pbj_form.node.allowed) }}
+            <a class="btn btn-sm btn-primary">add</a>
           </div>
         </div>
       </fieldset>
 
       <fieldset>
-        <legend><strong>Access Control</strong></legend>
+        <legend><strong>Denied Permissions</strong></legend>
         <div class="row">
-          <div class="col-md-2">
-            {{ form_row(pbj_form.node.is_staff) }}
+          <div class="col-md-6">
+            {{ form_row(pbj_form.node.denied) }}
+            <a class="btn btn-sm btn-primary">add</a>
           </div>
         </div>
       </fieldset>
 
       <fieldset>
         <legend><strong>&nbsp;</strong></legend>
-        <button type="submit" class="btn btn-primary btn-xlg">Create User</button>
-        <a href="{{ path('gdbots_iam_admin_user_search') }}" class="btn btn-link">Cancel</a>
+        <button type="submit" class="btn btn-primary btn-xlg">Create Role</button>
+        <a href="{{ path('gdbots_iam_admin_list_role') }}" class="btn btn-link">Cancel</a>
       </fieldset>
 
       <div style="display: none;">
