@@ -88,7 +88,7 @@ The first ncr_get_node() will trigger the lazy load the run.
                 <select name="roles" multiple class="form-control">
                   {% for node_ref, role in available_roles %}
                     {% if not pbj.isInSet('roles', node_ref) %}
-                      <option value="{{ node_ref }}">{{ role['_id'] }}</option>
+                      <option value="{{ node_ref }}">{{ role.get('_id') }}</option>
                     {% endif %}
                   {% endfor %}
                 </select>
@@ -111,7 +111,7 @@ The first ncr_get_node() will trigger the lazy load the run.
                 <select name="roles" multiple class="form-control">
                   {% for node_ref, role in available_roles %}
                     {% if pbj.isInSet('roles', node_ref) %}
-                      <option value="{{ node_ref }}">{{ role['_id'] }}</option>
+                      <option value="{{ node_ref }}">{{ role.get('_id') }}</option>
                     {% endif %}
                   {% endfor %}
                 </select>

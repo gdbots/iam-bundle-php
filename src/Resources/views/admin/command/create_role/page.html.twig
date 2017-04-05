@@ -23,8 +23,18 @@
         <legend><strong>Allowed Permissions</strong></legend>
         <div class="row">
           <div class="col-md-6">
-            {{ form_row(pbj_form.node.allowed) }}
-            <a class="btn btn-sm btn-primary">add</a>
+
+            <ul id="allowed-set"
+                data-prototype="{{ form_widget(pbj_form.node.allowed.vars.prototype)|e('html_attr') }}">
+              {% for allowed in pbj_form.node.allowed %}
+                <li>
+                  {{ form_errors(allowed) }}
+                  {{ form_widget(allowed) }}
+                </li>
+              {% endfor %}
+            </ul>
+
+            <a href="#" id="add-field">Add</a>
           </div>
         </div>
       </fieldset>
@@ -51,4 +61,24 @@
       {{ form_end(pbj_form) }}<!--/#{{ pbj_form.vars.id }}-->
     </div>
   </div>
+
+  <script>
+    var allowedCount = '{{ pbj_form.node.allowed|length }}';
+
+    jQuery(document).ready(function() {
+      jQuery('#add-field').click(function(e) {
+        e.preventDefault();
+
+        var allowedSet = jQuery('#allowed-set');
+        var newWidget = allowedConllecion.attr('data-prototype');
+
+        newWidget = newWidget.replace(/__name__/g, allowedCount);
+        allowedCount++;
+
+        // create a new list element and add it to the list
+        var newLi = jQuery('<li></li>').html(newWidget);
+        newLi.appendTo(allowedSet);
+      });
+    })
+  </script>
 {% endblock %}

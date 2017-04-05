@@ -33,14 +33,10 @@
               {{ role.get('_id') }}
             </td>
             <td>
-              {% for allowed in role.get('allowed') %}
-                <span>{{ allowed }}</span>
-              {% endfor %}
+              {{ role.get('allowed')|join(',') }}
             </td>
             <td>
-              {% for denied in role.get('denied') %}
-              <span>{{ denied }}</span>
-              {% endfor %}
+              {{ role.get('denied')|join(',') }}
             </td>
             <td>{{ role.get('created_at').toDateTime()|date('F d, Y @ h:ia T') }}</td>
           </tr>
