@@ -4,27 +4,37 @@
     xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
   <parameters>
-    <parameter key="gdbots_iam.admin.user_controller.class">Gdbots\Bundle\IamBundle\Controller\Admin\UserController</parameter>
+    <parameter key="gdbots_iam.role_projector.class">Gdbots\Iam\RoleProjector</parameter>
     <parameter key="gdbots_iam.user_projector.class">Gdbots\Iam\UserProjector</parameter>
   </parameters>
 
   <services>
-    <!-- controllers -->
-    <service id="gdbots_iam.admin.user_controller" class="%gdbots_iam.admin.user_controller.class%">
-      <call method="setContainer">
-        <argument type="service" id="service_container" />
-      </call>
+    <!-- validators -->
+    <service id="gdbots_iam.unique_role_validator" class="Gdbots\Iam\Validator\UniqueRoleValidator">
+      <tag name="pbjx.event_subscriber"/>
+      <tag name="pbjx.validator"/>
     </service>
 
-    <!-- validators -->
     <service id="gdbots_iam.unique_user_validator" class="Gdbots\Iam\Validator\UniqueUserValidator">
       <tag name="pbjx.event_subscriber"/>
       <tag name="pbjx.validator"/>
     </service>
 
     <!-- command handlers -->
+    <service id="gdbots_iam.create_role_handler" class="Gdbots\Iam\CreateRoleHandler">
+      <tag name="pbjx.handler" alias="%app_vendor%_iam.create_role_handler"/>
+    </service>
+
     <service id="gdbots_iam.create_user_handler" class="Gdbots\Iam\CreateUserHandler">
       <tag name="pbjx.handler" alias="%app_vendor%_iam.create_user_handler"/>
+    </service>
+
+    <service id="gdbots_iam.delete_role_handler" class="Gdbots\Iam\DeleteRoleHandler">
+      <tag name="pbjx.handler" alias="%app_vendor%_iam.grant_roles_to_user_handler"/>
+    </service>
+
+    <service id="gdbots_iam.delete_user_handler" class="Gdbots\Iam\DeleteUserHandler">
+      <tag name="pbjx.handler" alias="%app_vendor%_iam.delete_user_handler"/>
     </service>
 
     <service id="gdbots_iam.grant_roles_to_user_handler" class="Gdbots\Iam\GrantRolesToUserHandler">
@@ -35,13 +45,41 @@
       <tag name="pbjx.handler" alias="%app_vendor%_iam.revoke_roles_from_user_handler"/>
     </service>
 
+    <service id="gdbots_iam.update_role_handler" class="Gdbots\Iam\UpdateRoleHandler">
+      <tag name="pbjx.handler" alias="%app_vendor%_iam.update_role_handler"/>
+    </service>
+
     <service id="gdbots_iam.update_user_handler" class="Gdbots\Iam\UpdateUserHandler">
       <tag name="pbjx.handler" alias="%app_vendor%_iam.update_user_handler"/>
     </service>
 
     <!-- request handlers -->
+    <service id="gdbots_iam.get_role_history_request_handler" class="Gdbots\Iam\GetRoleHistoryRequestHandler">
+      <tag name="pbjx.handler" alias="%app_vendor%_iam.get_role_history_request_handler"/>
+    </service>
+
+    <service id="gdbots_iam.get_role_request_handler" class="Gdbots\Iam\GetRoleRequestHandler">
+      <argument type="service" id="ncr"/>
+      <tag name="pbjx.handler" alias="%app_vendor%_iam.get_user_request_handler"/>
+    </service>
+
+    <service id="gdbots_iam.get_user_batch_request_handler" class="Gdbots\Iam\GetUserBatchRequestHandler">
+      <argument type="service" id="ncr"/>
+      <tag name="pbjx.handler" alias="%app_vendor%_iam.get_user_batch_request_handler"/>
+    </service>
+
     <service id="gdbots_iam.get_user_history_request_handler" class="Gdbots\Iam\GetUserHistoryRequestHandler">
       <tag name="pbjx.handler" alias="%app_vendor%_iam.get_user_history_request_handler"/>
+    </service>
+
+    <service id="gdbots_iam.get_user_request_handler" class="Gdbots\Iam\GetUserRequestHandler">
+      <argument type="service" id="ncr"/>
+      <tag name="pbjx.handler" alias="%app_vendor%_iam.get_user_request_handler"/>
+    </service>
+
+    <service id="gdbots_iam.list_all_roles_request_handler" class="Gdbots\Iam\ListAllRolesRequestHandler">
+      <argument type="service" id="ncr"/>
+      <tag name="pbjx.handler" alias="%app_vendor%_iam.list_all_roles_request_handler"/>
     </service>
 
     <service id="gdbots_iam.search_users_request_handler" class="Gdbots\Iam\SearchUsersRequestHandler">
@@ -50,6 +88,12 @@
     </service>
 
     <!-- projectors -->
+    <service id="gdbots_iam.role_projector" class="%gdbots_iam.role_projector.class%">
+      <argument type="service" id="ncr"/>
+      <tag name="pbjx.event_listener" event="%app_vendor%:iam:event:*" method="onEvent"/>
+      <tag name="pbjx.projector"/>
+    </service>
+
     <service id="gdbots_iam.user_projector" class="%gdbots_iam.user_projector.class%">
       <argument type="service" id="ncr"/>
       <argument type="service" id="ncr_search"/>
