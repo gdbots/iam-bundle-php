@@ -7,8 +7,7 @@
   "require": {
     "php": ">=7.1",
     "gdbots/iam": "dev-power-rangers as 0.1.0",
-    "gdbots/ncr-bundle": "~0.1",
-    "symfony/symfony": "~3.2"
+    "gdbots/ncr-bundle": "~0.1"
   },
   "require-dev": {
     "composer/composer": "1.0.*@dev",
