@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Gdbots\Bundle\IamBundle\Binder;
 
@@ -8,7 +8,7 @@ use Gdbots\Pbjx\Event\PbjxEvent;
 use Gdbots\Pbjx\EventSubscriber;
 use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
-use Gdbots\Schemas\Pbjx\Mixin\Request\Request as PbjxRequest;
+use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 final class CtxUserRefBinder implements EventSubscriber
@@ -30,7 +30,7 @@ final class CtxUserRefBinder implements EventSubscriber
     public function bind(PbjxEvent $pbjxEvent): void
     {
         $message = $pbjxEvent->getMessage();
-        if (!$message instanceof Command && !$message instanceof Event && !$message instanceof PbjxRequest) {
+        if (!$message instanceof Command && !$message instanceof Event && !$message instanceof Request) {
             return;
         }
 
