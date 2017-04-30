@@ -1,8 +1,9 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
-namespace Gdbots\Bundle\IamBundle\Security\OAuth;
+namespace Gdbots\Bundle\IamBundle\Security\Jwt;
 
+use Gdbots\Bundle\IamBundle\Security\AnonymousUser;
 use Gdbots\Bundle\IamBundle\Security\User;
 use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbjx\Pbjx;
@@ -10,21 +11,18 @@ use Gdbots\Schemas\Iam\Mixin\GetUserRequest\GetUserRequest;
 use Gdbots\Schemas\Iam\Mixin\GetUserRequest\GetUserRequestV1Mixin;
 use Gdbots\Schemas\Iam\Mixin\User\UserV1Mixin;
 use Gdbots\Schemas\Ncr\NodeRef;
-use HWI\Bundle\OAuthBundle\OAuth\Response\UserResponseInterface;
-use HWI\Bundle\OAuthBundle\Security\Core\User\OAuthAwareUserProviderInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
 use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Security\Core\User\UserProviderInterface;
 
-final class Auth0UserProvider implements UserProviderInterface, OAuthAwareUserProviderInterface
+class Auth0UserProvider implements JwtUserProvider
 {
     /** @var Pbjx */
-    private $pbjx;
+    protected $pbjx;
 
     /** @var RequestStack */
-    private $requestStack;
+    protected $requestStack;
 
     /**
      * @param Pbjx         $pbjx
@@ -41,25 +39,23 @@ final class Auth0UserProvider implements UserProviderInterface, OAuthAwareUserPr
      */
     public function loadUserByUsername($username)
     {
-        return $this->loadByIdOrEmail($username);
+        throw new UsernameNotFoundException('Method not implemented');
     }
 
     /**
      * {@inheritdoc}
      */
-    public function loadUserByOAuthUserResponse(UserResponseInterface $response)
+    public function getAnonymousUser(): UserInterface
     {
-        $auth0 = $response->getResponse();
+        return new AnonymousUser();
+    }
 
-        if (!isset($auth0['user_id']) || !isset($auth0['email']) || !isset($auth0['email_verified'])) {
-            throw new UsernameNotFoundException('You are not authorized to access this application (1).');
-        }
-
-        if (true !== (bool)$auth0['email_verified']) {
-            throw new UsernameNotFoundException('You are not authorized to access this application (2).');
-        }
-
-        return $this->loadByIdOrEmail($auth0['email'], true);
+    /**
+     * {@inheritdoc}
+     */
+    public function loadUserByJwt(\stdClass $jwt): UserInterface
+    {
+        return $this->loadByIdOrEmail('8cfcbd93-4a5d-418f-b73c-c7c394ec9e6a');
     }
 
     /**
@@ -67,11 +63,7 @@ final class Auth0UserProvider implements UserProviderInterface, OAuthAwareUserPr
      */
     public function refreshUser(UserInterface $user)
     {
-        if (!$this->supportsClass(get_class($user))) {
-            throw new UnsupportedUserException(sprintf('Unsupported user class "%s"', get_class($user)));
-        }
-
-        return $this->loadUserByUsername($user->getUsername());
+        throw new UnsupportedUserException(sprintf('Unsupported user class "%s"', get_class($user)));
     }
 
     /**
@@ -109,8 +101,6 @@ final class Auth0UserProvider implements UserProviderInterface, OAuthAwareUserPr
         try {
             /** @var GetUserRequest $request */
             $request = $getUserSchema->createMessage()
-                // when authorizing from auth0 flow, do a consistent read
-                ->set('consistent_read', $byEmail)
                 ->set('qname', $qname->toString())
                 ->set($field, $idOrEmail);
             $response = $this->pbjx->request($request);

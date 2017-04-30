@@ -3,20 +3,38 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
-  <!-- This provider requires "hwi/oauth-bundle" bundle. -->
+  <!-- This provider requires "auth0/auth0-php" library. -->
 
   <parameters>
+    <parameter key="env(AUTH0_CLIENT_ID)"/>
+    <parameter key="env(AUTH0_CLIENT_DOMAIN)"/>
+    <parameter key="env(AUTH0_API_IDENTIFIER)"/>
+    <parameter key="env(AUTH0_AUTHORIZED_ISSUER)"/>
+
     <!-- tmp, moving to db -->
     <parameter key="permissions_map" type="collection">
       <parameter key="%app_vendor%:iam:command:create-user">ROLE_SUPER_USER</parameter>
     </parameter>
-
-    <!-- the Auth0 lock only uses a state variable, not a full auth url -->
-    <parameter key="hwi_oauth.storage.session.class">Gdbots\Bundle\IamBundle\Security\OAuth\Auth0SessionStorage</parameter>
   </parameters>
 
   <services>
-    <service id="gdbots_iam.security.oauth.auth0_user_provider" class="Gdbots\Bundle\IamBundle\Security\OAuth\Auth0UserProvider">
+    <service id="gdbots_iam.security.auth0.jwt_authenticator" class="Gdbots\Bundle\IamBundle\Security\Jwt\Auth0JwtAuthenticator" public="false">
+      <argument type="service" id="gdbots_iam.security.auth0.jwt_decoder"/>
+    </service>
+
+    <service id="gdbots_iam.security.auth0.cache_handler" class="Gdbots\Bundle\IamBundle\Security\Jwt\Auth0CacheHandler" public="false">
+      <argument type="service" id="cache.app"/>
+    </service>
+
+    <service id="gdbots_iam.security.auth0.jwt_decoder" class="Gdbots\Bundle\IamBundle\Security\Jwt\Auth0JwtDecoder" public="false">
+      <argument type="service" id="gdbots_iam.security.auth0.cache_handler"/>
+      <argument>%env(AUTH0_CLIENT_ID)%</argument>
+      <argument>%env(AUTH0_CLIENT_DOMAIN)%</argument>
+      <argument>%env(AUTH0_API_IDENTIFIER)%</argument>
+      <argument>%env(AUTH0_AUTHORIZED_ISSUER)%</argument>
+    </service>
+
+    <service id="gdbots_iam.security.auth0.user_provider" class="Gdbots\Bundle\IamBundle\Security\Jwt\Auth0UserProvider">
       <argument type="service" id="pbjx"/>
       <argument type="service" id="request_stack"/>
     </service>
@@ -39,8 +57,6 @@
       <argument type="service" id="security.authorization_checker"/>
       <tag name="pbjx.event_subscriber"/>
     </service>
-
-    <!-- request handlers -->
   </services>
 
 </container>
