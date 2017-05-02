@@ -6,8 +6,6 @@
   <!-- This provider requires "auth0/auth0-php" library. -->
 
   <parameters>
-    <parameter key="env(AUTH0_CLIENT_ID)"/>
-    <parameter key="env(AUTH0_CLIENT_DOMAIN)"/>
     <parameter key="env(AUTH0_API_IDENTIFIER)"/>
     <parameter key="env(AUTH0_AUTHORIZED_ISSUER)"/>
 
@@ -28,8 +26,6 @@
 
     <service id="gdbots_iam.security.auth0.jwt_decoder" class="Gdbots\Bundle\IamBundle\Security\Jwt\Auth0JwtDecoder" public="false">
       <argument type="service" id="gdbots_iam.security.auth0.cache_handler"/>
-      <argument>%env(AUTH0_CLIENT_ID)%</argument>
-      <argument>%env(AUTH0_CLIENT_DOMAIN)%</argument>
       <argument>%env(AUTH0_API_IDENTIFIER)%</argument>
       <argument>%env(AUTH0_AUTHORIZED_ISSUER)%</argument>
     </service>

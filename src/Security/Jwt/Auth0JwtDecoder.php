@@ -13,18 +13,11 @@ class Auth0JwtDecoder
 
     /**
      * @param CacheHandler $cache
-     * @param string       $clientId
-     * @param string       $clientDomain
      * @param string       $apiIdentifier
      * @param string       $issuer
      */
-    public function __construct(
-        CacheHandler $cache,
-        string $clientId,
-        string $clientDomain,
-        string $apiIdentifier,
-        string $issuer
-    ) {
+    public function __construct(CacheHandler $cache, string $apiIdentifier, string $issuer)
+    {
         $this->verifier = new JWTVerifier([
             'cache'           => $cache,
             'supported_algs'  => ['RS256'],

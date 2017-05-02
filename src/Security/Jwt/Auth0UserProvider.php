@@ -5,6 +5,7 @@ namespace Gdbots\Bundle\IamBundle\Security\Jwt;
 
 use Gdbots\Bundle\IamBundle\Security\AnonymousUser;
 use Gdbots\Bundle\IamBundle\Security\User;
+use Gdbots\Pbj\MessageRef;
 use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbjx\Pbjx;
 use Gdbots\Schemas\Iam\Mixin\GetUserRequest\GetUserRequest;
@@ -55,7 +56,15 @@ class Auth0UserProvider implements JwtUserProvider
      */
     public function loadUserByJwt(\stdClass $jwt): UserInterface
     {
-        return $this->loadByIdOrEmail('8cfcbd93-4a5d-418f-b73c-c7c394ec9e6a');
+        $userRefProperty = ($jwt->aud ?: '') . 'ctx_user_ref';
+        $ctxUserRef = $jwt->$userRefProperty ?? null;
+//        var_dump($userRefProperty);
+//        var_dump($jwt);
+//        var_dump($ctxUserRef);
+//        exit;
+        $messageRef = MessageRef::fromString($ctxUserRef);
+
+        return $this->loadByNodeRef(NodeRef::fromMessageRef($messageRef));
     }
 
     /**
@@ -75,39 +84,26 @@ class Auth0UserProvider implements JwtUserProvider
     }
 
     /**
-     * @param string $idOrEmail
-     * @param bool   $byEmail
+     * @param NodeRef $nodeRef
      *
      * @return User
      *
      * @throws UsernameNotFoundException
      */
-    protected function loadByIdOrEmail(string $idOrEmail, bool $byEmail = false): User
+    protected function loadByNodeRef(NodeRef $nodeRef): User
     {
         $symfonyRequest = $this->requestStack->getCurrentRequest();
         $symfonyRequest->attributes->set('_authenticating_user', true);
 
         $getUserSchema = MessageResolver::findOneUsingMixin(GetUserRequestV1Mixin::create(), 'iam', 'request');
-        $userSchema = MessageResolver::findOneUsingMixin(UserV1Mixin::create(), 'iam', 'node');
-        $qname = $userSchema->getQName();
-
-        if ($byEmail) {
-            $field = 'email';
-        } else {
-            $field = 'node_ref';
-            $idOrEmail = new NodeRef($qname, $idOrEmail);
-        }
 
         try {
             /** @var GetUserRequest $request */
-            $request = $getUserSchema->createMessage()
-                ->set('qname', $qname->toString())
-                ->set($field, $idOrEmail);
+            $request = $getUserSchema->createMessage()->set('node_ref', $nodeRef);
             $response = $this->pbjx->request($request);
-
             return new User($response->get('node'));
         } catch (\Exception $e) {
-            throw new UsernameNotFoundException('You are not authorized to access this application (3).',
+            throw new UsernameNotFoundException('You are not authorized to access this application.',
                 $e->getCode(),
                 $e
             );
