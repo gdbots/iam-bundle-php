@@ -8,6 +8,7 @@
   <parameters>
     <parameter key="env(AUTH0_API_IDENTIFIER)"/>
     <parameter key="env(AUTH0_AUTHORIZED_ISSUER)"/>
+    <parameter key="env(AUTH0_SIGNING_SECRET)"/>
 
     <!-- tmp, moving to db -->
     <parameter key="permissions_map" type="collection">
@@ -28,6 +29,7 @@
       <argument type="service" id="gdbots_iam.security.auth0.cache_handler"/>
       <argument>%env(AUTH0_API_IDENTIFIER)%</argument>
       <argument>%env(AUTH0_AUTHORIZED_ISSUER)%</argument>
+      <argument>%env(AUTH0_SIGNING_SECRET)%</argument>
     </service>
 
     <service id="gdbots_iam.security.auth0.user_provider" class="Gdbots\Bundle\IamBundle\Security\Jwt\Auth0UserProvider">

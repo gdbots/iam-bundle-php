@@ -14,15 +14,21 @@ class Auth0JwtDecoder
     /**
      * @param CacheHandler $cache
      * @param string       $apiIdentifier
-     * @param string       $issuer
+     * @param string       $authorizedIssuer
+     * @param string       $signingKey Required for enriching jwt access token with ctx_user_ref in rules/hoooks.
      */
-    public function __construct(CacheHandler $cache, string $apiIdentifier, string $issuer)
-    {
+    public function __construct(
+        CacheHandler $cache,
+        string $apiIdentifier,
+        string $authorizedIssuer,
+        string $signingKey
+    ) {
         $this->verifier = new JWTVerifier([
             'cache'           => $cache,
-            'supported_algs'  => ['RS256'],
+            'supported_algs'  => ['RS256', 'HS256'],
             'valid_audiences' => [$apiIdentifier],
-            'authorized_iss'  => [$issuer],
+            'authorized_iss'  => [$authorizedIssuer],
+            'client_secret'   => $signingKey,
         ]);
     }
 
