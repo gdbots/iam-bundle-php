@@ -34,8 +34,9 @@ class User implements AdvancedUserInterface, EquatableInterface
         $this->nodeRef = NodeRef::fromNode($node);
         $this->userRef = $node->generateMessageRef();
 
+        /** @var NodeRef $role */
         foreach ($this->node->get('roles', []) as $role) {
-            $this->roles[] = 'ROLE_' . $role;
+            $this->roles[] = 'ROLE_' . strtoupper(str_replace('-', '_', $role->getId()));
         }
 
         if ($this->node->get('is_staff')) {

@@ -3,7 +3,11 @@ declare(strict_types=1);
 
 namespace Gdbots\Bundle\IamBundle\Security\Jwt;
 
-use Symfony\Component\HttpFoundation\Response;
+use Gdbots\Common\Util\ClassUtils;
+use Gdbots\Schemas\Pbjx\Enum\Code;
+use Gdbots\Schemas\Pbjx\Enum\HttpCode;
+use Gdbots\Schemas\Pbjx\EnvelopeV1;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
@@ -61,8 +65,9 @@ class Auth0JwtAuthenticator implements SimplePreAuthenticatorInterface, Authenti
         if (null === $token->getCredentials()) {
             $user = $userProvider->getAnonymousUser();
         } else {
-            $user = $userProvider->loadUserByJwt($token->getCredentials());
-            if (!$user) {
+            try {
+                $user = $userProvider->loadUserByJwt($token->getCredentials());
+            } catch (\Exception $e) {
                 throw new AuthenticationException('Invalid JWT.');
             }
         }
@@ -83,7 +88,17 @@ class Auth0JwtAuthenticator implements SimplePreAuthenticatorInterface, Authenti
      */
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception)
     {
-        // fixme: create and encode envelope here?
-        return new Response("Authentication Failed: {$exception->getMessage()}", 403);
+        $envelope = EnvelopeV1::create()
+            ->set('ok', false)
+            ->set('code', Code::PERMISSION_DENIED)
+            ->set('http_code', HttpCode::HTTP_FORBIDDEN())
+            ->set('error_name', ClassUtils::getShortName($exception))
+            ->set('error_message', $exception->getMessage());
+
+        return new JsonResponse($envelope->toArray(), HttpCode::HTTP_FORBIDDEN, [
+            'Content-Type'       => 'application/json',
+            'ETag'               => $envelope->get('etag'),
+            'x-pbjx-envelope-id' => $envelope->get('envelope_id'),
+        ]);
     }
 }
