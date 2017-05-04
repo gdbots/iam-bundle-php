@@ -55,9 +55,9 @@ final class PbjxPermissionValidator implements EventSubscriber
             }
         }
 
-        if ($request->attributes->getBoolean('_authenticating_user')) {
+        if ($request->attributes->getBoolean('iam_bypass_permissions')) {
             // when attempting to load the user for authentication, we can't do a permission check.
-            $request->attributes->remove('_authenticating_user');
+            $request->attributes->remove('iam_bypass_permissions');
             return;
         }
 

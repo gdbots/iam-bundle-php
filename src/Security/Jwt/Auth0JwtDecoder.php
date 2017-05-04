@@ -24,11 +24,12 @@ class Auth0JwtDecoder
         string $signingKey
     ) {
         $this->verifier = new JWTVerifier([
-            'cache'           => $cache,
-            'supported_algs'  => ['RS256', 'HS256'],
-            'valid_audiences' => [$apiIdentifier],
-            'authorized_iss'  => [$authorizedIssuer],
-            'client_secret'   => $signingKey,
+            'cache'                 => $cache,
+            'supported_algs'        => ['RS256', 'HS256'],
+            'valid_audiences'       => [$apiIdentifier],
+            'authorized_iss'        => [$authorizedIssuer],
+            'client_secret'         => $signingKey,
+            'secret_base64_encoded' => false,
         ]);
     }
 
@@ -41,6 +42,8 @@ class Auth0JwtDecoder
      */
     public function decode(string $jwt): \stdClass
     {
-        return $this->verifier->verifyAndDecode($jwt);
+        $result = $this->verifier->verifyAndDecode($jwt);
+        $result->is_jwt = true;
+        return $result;
     }
 }

@@ -42,8 +42,8 @@ class Auth0JwtAuthenticator implements SimplePreAuthenticatorInterface, Authenti
 
         try {
             $token = $this->decoder->decode($jwt);
-        } catch (\UnexpectedValueException $ex) {
-            throw new BadCredentialsException('Invalid token');
+        } catch (\Exception $e) {
+            throw new BadCredentialsException('Invalid token.');
         }
 
         return new PreAuthenticatedToken('anon.', $token, $providerKey);
@@ -83,6 +83,7 @@ class Auth0JwtAuthenticator implements SimplePreAuthenticatorInterface, Authenti
      */
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception)
     {
+        // fixme: create and encode envelope here?
         return new Response("Authentication Failed: {$exception->getMessage()}", 403);
     }
 }

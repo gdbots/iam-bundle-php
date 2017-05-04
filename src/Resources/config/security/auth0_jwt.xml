@@ -17,6 +17,12 @@
   </parameters>
 
   <services>
+    <service id="gdbots_iam.auth0_controller" class="Gdbots\Bundle\IamBundle\Controller\Auth0Controller">
+      <call method="setContainer">
+        <argument type="service" id="service_container"/>
+      </call>
+    </service>
+
     <service id="gdbots_iam.security.auth0.jwt_authenticator" class="Gdbots\Bundle\IamBundle\Security\Jwt\Auth0JwtAuthenticator" public="false">
       <argument type="service" id="gdbots_iam.security.auth0.jwt_decoder"/>
     </service>

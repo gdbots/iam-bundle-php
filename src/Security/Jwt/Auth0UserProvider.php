@@ -10,7 +10,6 @@ use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbjx\Pbjx;
 use Gdbots\Schemas\Iam\Mixin\GetUserRequest\GetUserRequest;
 use Gdbots\Schemas\Iam\Mixin\GetUserRequest\GetUserRequestV1Mixin;
-use Gdbots\Schemas\Iam\Mixin\User\UserV1Mixin;
 use Gdbots\Schemas\Ncr\NodeRef;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
@@ -58,12 +57,13 @@ class Auth0UserProvider implements JwtUserProvider
     {
         $userRefProperty = ($jwt->aud ?: '') . 'ctx_user_ref';
         $ctxUserRef = $jwt->$userRefProperty ?? null;
-//        var_dump($userRefProperty);
-//        var_dump($jwt);
-//        var_dump($ctxUserRef);
-//        exit;
-        $messageRef = MessageRef::fromString($ctxUserRef);
 
+        // fixme: load by noderef, then email (if exists), then anon user
+        if (null === $ctxUserRef) {
+            return $this->getAnonymousUser();
+        }
+
+        $messageRef = MessageRef::fromString($ctxUserRef);
         return $this->loadByNodeRef(NodeRef::fromMessageRef($messageRef));
     }
 
@@ -93,22 +93,20 @@ class Auth0UserProvider implements JwtUserProvider
     protected function loadByNodeRef(NodeRef $nodeRef): User
     {
         $symfonyRequest = $this->requestStack->getCurrentRequest();
-        $symfonyRequest->attributes->set('_authenticating_user', true);
+        $symfonyRequest->attributes->set('iam_bypass_permissions', true);
 
         $getUserSchema = MessageResolver::findOneUsingMixin(GetUserRequestV1Mixin::create(), 'iam', 'request');
 
         try {
             /** @var GetUserRequest $request */
             $request = $getUserSchema->createMessage()->set('node_ref', $nodeRef);
+
             $response = $this->pbjx->request($request);
             return new User($response->get('node'));
         } catch (\Exception $e) {
-            throw new UsernameNotFoundException('You are not authorized to access this application.',
-                $e->getCode(),
-                $e
-            );
+            throw new UsernameNotFoundException('You are not authorized to access this application.', $e->getCode(), $e);
         } finally {
-            $symfonyRequest->attributes->remove('_authenticating_user');
+            $symfonyRequest->attributes->remove('iam_bypass_permissions');
         }
     }
 }
