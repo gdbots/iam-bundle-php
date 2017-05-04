@@ -13,6 +13,7 @@ use Gdbots\Schemas\Iam\Mixin\GetUserRequest\GetUserRequestV1Mixin;
 use Gdbots\Schemas\Iam\Mixin\User\UserV1Mixin;
 use Gdbots\Schemas\Ncr\NodeRef;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Security\Core\Exception\DisabledException;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -103,11 +104,18 @@ class Auth0UserProvider implements JwtUserProvider
         try {
             /** @var GetUserRequest $request */
             $request = $getUserSchema->createMessage()->set('node_ref', $nodeRef);
-
             $response = $this->pbjx->request($request);
-            return new User($response->get('node'));
+
+            $user = new User($response->get('node'));
+            if (!$user->isEnabled()) {
+                throw new DisabledException('Your account is disabled.');
+            }
+
+            return $user;
+        } catch (DisabledException $de) {
+            throw $de;
         } catch (\Exception $e) {
-            throw new UsernameNotFoundException('You are not authorized to access this application (1).', $e->getCode(), $e);
+            throw new UsernameNotFoundException('You are not authorized to access this application.', $e->getCode(), $e);
         } finally {
             $symfonyRequest->attributes->remove('iam_bypass_permissions');
         }
@@ -134,11 +142,18 @@ class Auth0UserProvider implements JwtUserProvider
             $request = $getUserSchema->createMessage()
                 ->set('qname', $qname->toString())
                 ->set('email', $email);
-
             $response = $this->pbjx->request($request);
-            return new User($response->get('node'));
+
+            $user = new User($response->get('node'));
+            if (!$user->isEnabled()) {
+                throw new DisabledException('Your account is disabled.');
+            }
+
+            return $user;
+        } catch (DisabledException $de) {
+            throw $de;
         } catch (\Exception $e) {
-            throw new UsernameNotFoundException('You are not authorized to access this application (2).', $e->getCode(), $e);
+            throw new UsernameNotFoundException('You are not authorized to access this application.', $e->getCode(), $e);
         } finally {
             $symfonyRequest->attributes->remove('iam_bypass_permissions');
         }

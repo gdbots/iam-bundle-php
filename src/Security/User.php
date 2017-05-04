@@ -157,7 +157,6 @@ class User implements AdvancedUserInterface, EquatableInterface
     public function isEnabled()
     {
         return NodeStatus::PUBLISHED()->equals($this->node->get('status'))
-            && $this->node->get('is_staff')
             && !$this->node->get('is_blocked');
     }
 }

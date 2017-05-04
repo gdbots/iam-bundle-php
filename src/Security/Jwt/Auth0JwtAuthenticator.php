@@ -68,7 +68,7 @@ class Auth0JwtAuthenticator implements SimplePreAuthenticatorInterface, Authenti
             try {
                 $user = $userProvider->loadUserByJwt($token->getCredentials());
             } catch (\Exception $e) {
-                throw new AuthenticationException('Invalid JWT.');
+                throw new AuthenticationException($e->getMessage());
             }
         }
 
