@@ -45,7 +45,7 @@
 
     <service id="gdbots_iam.security.pbjx_permission_voter" class="Gdbots\Bundle\IamBundle\Security\PbjxPermissionVoter" public="false">
       <argument type="service" id="security.access.decision_manager"/>
-      <argument>%permissions_map%</argument>
+      <argument type="service" id="pbjx"/>
       <tag name="security.voter"/>
     </service>
 

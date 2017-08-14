@@ -3,13 +3,22 @@ declare(strict_types=1);
 
 namespace Gdbots\Bundle\IamBundle\Security;
 
+use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbj\SchemaCurie;
+use Gdbots\Pbjx\Pbjx;
+use Gdbots\Schemas\Iam\Mixin\GetRoleBatchRequest\GetRoleBatchRequestV1Mixin;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 
 final class PbjxPermissionVoter implements VoterInterface
 {
+    /** @var AccessDecisionManagerInterface */
+    private $decisionManager;
+
+    /** @var Pbjx */
+    private $pbjx;
+
     /**
      * Array of curies already checked for permission.  Key is the curie of the
      * message, value is the result, @see VoterInterface
@@ -18,20 +27,21 @@ final class PbjxPermissionVoter implements VoterInterface
      */
     private $checked = [];
 
-    /** @var AccessDecisionManagerInterface */
-    private $decisionManager;
-
-    /** @var array */
-    private $permissions;
+    /**
+     * Array of policies keys by user node ref.
+     *
+     * @var Policy[]
+     */
+    private $policies = [];
 
     /**
      * @param AccessDecisionManagerInterface $decisionManager
-     * @param array                          $permissions
+     * @param Pbjx                           $pbjx
      */
-    public function __construct(AccessDecisionManagerInterface $decisionManager, array $permissions = [])
+    public function __construct(AccessDecisionManagerInterface $decisionManager, Pbjx $pbjx)
     {
         $this->decisionManager = $decisionManager;
-        $this->permissions = $permissions;
+        $this->pbjx = $pbjx;
     }
 
     /**
@@ -51,24 +61,48 @@ final class PbjxPermissionVoter implements VoterInterface
             return VoterInterface::ACCESS_ABSTAIN;
         }
 
+        // starting for Arun...
+
         if (isset($this->checked[$curie])) {
             return $this->checked[$curie];
         }
 
-        if (!$token->getUser() instanceof User) {
+        $user = $token->getUser();
+        if (!$user instanceof User) {
             return $this->checked[$curie] = VoterInterface::ACCESS_DENIED;
         }
 
-        if (!isset($this->permissions[$curie])) {
-            return $this->checked[$curie] = VoterInterface::ACCESS_DENIED;
-        }
-
-        $permission = is_array($this->permissions[$curie]) ? $this->permissions[$curie] : [$this->permissions[$curie]];
-
-        if ($this->decisionManager->decide($token, $permission, $subject)) {
+        $policy = $this->getPolicy($user);
+        if ($policy->isGranted($curie)) {
             return $this->checked[$curie] = VoterInterface::ACCESS_GRANTED;
         }
 
         return $this->checked[$curie] = VoterInterface::ACCESS_DENIED;
+    }
+
+    private function getPolicy(User $user): Policy
+    {
+        // store array of policies by user node ref...
+        $key = $user->getUserNodeRef()->toString();
+        if (isset($this->policies[$key])) {
+            return $this->policies[$key];
+        }
+
+        $node = $user->getUserNode();
+        if (!$node->has('roles')) {
+            // make a policy anyways, then stores in this->policies and return it.
+
+        }
+
+        $request = MessageResolver::findOneUsingMixin(GetRoleBatchRequestV1Mixin::create(), 'iam', 'request')->createMessage();
+        $request->addToSet('node_refs', $node->get('roles', []));
+
+        try {
+            $response = $this->pbjx->request($request);
+        } catch (\Exception $e) {
+        }
+
+        $policy = new Policy($response->get('nodes', []));
+        // store locally, return it.
     }
 }
