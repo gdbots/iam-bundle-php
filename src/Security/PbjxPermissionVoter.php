@@ -6,6 +6,7 @@ namespace Gdbots\Bundle\IamBundle\Security;
 use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbj\SchemaCurie;
 use Gdbots\Pbjx\Pbjx;
+use Gdbots\Iam\Policy;
 use Gdbots\Schemas\Iam\Mixin\GetRoleBatchRequest\GetRoleBatchRequestV1Mixin;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
@@ -61,8 +62,6 @@ final class PbjxPermissionVoter implements VoterInterface
             return VoterInterface::ACCESS_ABSTAIN;
         }
 
-        // starting for Arun...
-
         if (isset($this->checked[$curie])) {
             return $this->checked[$curie];
         }
@@ -80,6 +79,11 @@ final class PbjxPermissionVoter implements VoterInterface
         return $this->checked[$curie] = VoterInterface::ACCESS_DENIED;
     }
 
+    /**
+     * @param User $user
+     *
+     * @return Policy
+     */
     private function getPolicy(User $user): Policy
     {
         // store array of policies by user node ref...
@@ -91,10 +95,13 @@ final class PbjxPermissionVoter implements VoterInterface
         $node = $user->getUserNode();
         if (!$node->has('roles')) {
             // make a policy anyways, then stores in this->policies and return it.
+            $policy = new Policy([]);
+            $this->policies[$key] = $policy;
 
+            return $policy;
         }
 
-        $request = MessageResolver::findOneUsingMixin(GetRoleBatchRequestV1Mixin::create(), 'iam', 'request')->createMessage();
+        $request = MessageResolver::findOneUsingMixin(GetRoleBatchRequestV1Mixin::create(), 'iam', 'request');
         $request->addToSet('node_refs', $node->get('roles', []));
 
         try {
@@ -103,6 +110,10 @@ final class PbjxPermissionVoter implements VoterInterface
         }
 
         $policy = new Policy($response->get('nodes', []));
+
         // store locally, return it.
+        $this->policies[$key] = $policy;
+
+        return $policy;
     }
 }
