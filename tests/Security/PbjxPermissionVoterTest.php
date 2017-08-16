@@ -72,7 +72,7 @@ class PbjxPermissionVoterTest extends TestCase
                 ->addToSet('allowed', ['acme:blog:command:create-article']),
         ];
         $userNode = UserV1::create()
-                    ->set('_id', UserId::fromString('123e4567-e89b-12d3-a456-426655440000'))
+                    ->set('_id', UserId::fromString('user-1'))
                     ->addToSet('roles', $roles);
         $user = new User($userNode);
 
