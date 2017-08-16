@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Gdbots\Tests\Bundle\IamBundle;
 
+use Acme\Schemas\Iam\Node\UserV1;
 use Gdbots\Bundle\IamBundle\Security\PbjxPermissionVoter;
 use Gdbots\Pbjx\Pbjx;
 use Gdbots\Pbjx\EventStore\InMemoryEventStore;
