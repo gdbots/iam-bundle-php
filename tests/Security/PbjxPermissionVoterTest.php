@@ -3,16 +3,35 @@ declare(strict_types=1);
 
 namespace Gdbots\Tests\Bundle\IamBundle;
 
+use Acme\Schemas\Iam\Node\RoleV1;
 use Acme\Schemas\Iam\Node\UserV1;
+use Acme\Schemas\Iam\UserId;
 use Gdbots\Bundle\IamBundle\Security\PbjxPermissionVoter;
+use Gdbots\Bundle\IamBundle\Security\User;
 use Gdbots\Pbjx\Pbjx;
 use Gdbots\Pbjx\EventStore\InMemoryEventStore;
 use Gdbots\Pbjx\RegisteringServiceLocator;
 use Gdbots\Ncr\Repository\InMemoryNcr;
+use Gdbots\Schemas\Iam\RoleId;
+use Gdbots\Schemas\Ncr\NodeRef;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Security\Core\Authentication\Token\AbstractToken;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
-use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
+
+class ConcreteToken extends AbstractToken
+{
+    public function __construct(User $user, array $roles)
+    {
+        parent::__construct($roles);
+
+        $this->setUser($user);
+    }
+
+    public function getCredentials()
+    {
+    }
+}
 
 class PbjxPermissionVoterTest extends TestCase
 {
@@ -45,11 +64,19 @@ class PbjxPermissionVoterTest extends TestCase
 
     public function testVote()
     {
-        $firewall = 'secured_area';
-        $token = new UsernamePasswordToken('admin', null, $firewall, array('ROLE_ADMIN'));
-        $subject = '';
         $attributes = ['acme:blog:command:create-article'];
         $expected = true;
+        $roles = [
+            RoleV1::create()
+                ->set('_id', RoleId::fromString('test1'))
+                ->addToSet('allowed', ['acme:blog:command:create-article']),
+        ];
+        $userNode = UserV1::create()
+                    ->set('_id', UserId::fromString('123e4567-e89b-12d3-a456-426655440000'))
+                    ->addToSet('roles', $roles);
+        $user = new User($userNode);
+
+        $token = new ConcreteToken($user, $user->getRoles());
 
         $this->decisionManager = new class implements AccessDecisionManagerInterface
         {
@@ -60,6 +87,6 @@ class PbjxPermissionVoterTest extends TestCase
         };
 
         $voter = new PbjxPermissionVoter($this->decisionManager, $this->pbjx);
-        $this->assertEquals($expected, $voter->vote($token, $subject, $attributes));
+        $this->assertEquals($expected, $voter->vote($token, 0, $attributes), 'Test Failed');
     }
 }

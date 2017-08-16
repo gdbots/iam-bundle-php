@@ -68,6 +68,8 @@ final class PbjxPermissionVoter implements VoterInterface
 
         $user = $token->getUser();
         if (!$user instanceof User) {
+            echo 'not a user instance';
+            exit;
             return $this->checked[$curie] = VoterInterface::ACCESS_DENIED;
         }
 
