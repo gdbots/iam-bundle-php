@@ -3,10 +3,14 @@ declare(strict_types=1);
 
 namespace Gdbots\Bundle\IamBundle\Security;
 
+use Acme\Schemas\Iam\Request\GetRoleBatchRequestV1;
+use Gdbots\Iam\GetRoleBatchRequestHandler;
+use Gdbots\Ncr\Repository\InMemoryNcr;
 use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbj\SchemaCurie;
 use Gdbots\Pbjx\Pbjx;
 use Gdbots\Iam\Policy;
+use Gdbots\Schemas\Iam\Mixin\GetRoleBatchRequest\GetRoleBatchRequest;
 use Gdbots\Schemas\Iam\Mixin\GetRoleBatchRequest\GetRoleBatchRequestV1Mixin;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
@@ -19,6 +23,9 @@ final class PbjxPermissionVoter implements VoterInterface
 
     /** @var Pbjx */
     private $pbjx;
+
+    /** @var  InMemoryNcr */
+    private $ncr;
 
     /**
      * Array of curies already checked for permission.  Key is the curie of the
@@ -38,11 +45,13 @@ final class PbjxPermissionVoter implements VoterInterface
     /**
      * @param AccessDecisionManagerInterface $decisionManager
      * @param Pbjx                           $pbjx
+     * @param InMemoryNcr $ncr
      */
-    public function __construct(AccessDecisionManagerInterface $decisionManager, Pbjx $pbjx)
+    public function __construct(AccessDecisionManagerInterface $decisionManager, Pbjx $pbjx, InMemoryNcr $ncr)
     {
         $this->decisionManager = $decisionManager;
         $this->pbjx = $pbjx;
+        $this->ncr = $ncr;
     }
 
     /**
@@ -68,15 +77,18 @@ final class PbjxPermissionVoter implements VoterInterface
 
         $user = $token->getUser();
         if (!$user instanceof User) {
-            return $this->checked[$curie] = VoterInterface::ACCESS_DENIED;
+            $this->checked[$curie] = VoterInterface::ACCESS_DENIED;
+            return VoterInterface::ACCESS_DENIED;
         }
 
         $policy = $this->getPolicy($user);
         if ($policy->isGranted($curie)) {
-            return $this->checked[$curie] = VoterInterface::ACCESS_GRANTED;
+            $this->checked[$curie] = VoterInterface::ACCESS_GRANTED;
+            return VoterInterface::ACCESS_GRANTED;
         }
 
-        return $this->checked[$curie] = VoterInterface::ACCESS_DENIED;
+        $this->checked[$curie] = VoterInterface::ACCESS_DENIED;
+        return VoterInterface::ACCESS_DENIED;
     }
 
     /**
@@ -101,11 +113,13 @@ final class PbjxPermissionVoter implements VoterInterface
             return $policy;
         }
 
-        $request = MessageResolver::findOneUsingMixin(GetRoleBatchRequestV1Mixin::create(), 'iam', 'request');
+        $request = GetRoleBatchRequestV1::create();
         $request->addToSet('node_refs', $node->get('roles', []));
+        $handler = new GetRoleBatchRequestHandler($this->ncr);
 
+        $response = null;
         try {
-            $response = $this->pbjx->request($request);
+            $response = $handler->handleRequest($request, $this->pbjx);
         } catch (\Exception $e) {
         }
 

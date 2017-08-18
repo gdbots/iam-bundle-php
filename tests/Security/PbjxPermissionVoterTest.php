@@ -64,16 +64,23 @@ class PbjxPermissionVoterTest extends TestCase
 
     public function testVote()
     {
-        $attributes = ['acme:blog:command:create-article'];
-        $expected = true;
+        $attributes = ['acme:blog:command:delete-article'];
+        $expected = -1;
         $roles = [
             RoleV1::create()
                 ->set('_id', RoleId::fromString('test1'))
                 ->addToSet('allowed', ['acme:blog:command:create-article']),
         ];
+
+        $roleNodeRefs = [];
+        foreach ($roles as $role) {
+            $roleNodeRefs[] = NodeRef::fromNode($role);
+            $this->ncr->putNode($role);
+        }
+
         $userNode = UserV1::create()
-                    ->set('_id', UserId::fromString('user-1'))
-                    ->addToSet('roles', $roles);
+                    ->set('_id', UserId::fromString('123e4567-e89b-12d3-a456-426655440000'))
+                    ->addToSet('roles', $roleNodeRefs);
         $user = new User($userNode);
 
         $token = new ConcreteToken($user, $user->getRoles());
@@ -86,7 +93,7 @@ class PbjxPermissionVoterTest extends TestCase
             }
         };
 
-        $voter = new PbjxPermissionVoter($this->decisionManager, $this->pbjx);
+        $voter = new PbjxPermissionVoter($this->decisionManager, $this->pbjx, $this->ncr);
         $this->assertEquals($expected, $voter->vote($token, 0, $attributes), 'Test Failed');
     }
 }
