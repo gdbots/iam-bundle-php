@@ -11,7 +11,7 @@ use Symfony\Component\Security\Core\User\AdvancedUserInterface;
 use Symfony\Component\Security\Core\User\EquatableInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
-class User implements AdvancedUserInterface, EquatableInterface
+class User implements AdvancedUserInterface, EquatableInterface, \JsonSerializable
 {
     /** @var UserNode */
     protected $node;
@@ -158,5 +158,20 @@ class User implements AdvancedUserInterface, EquatableInterface
     {
         return NodeStatus::PUBLISHED()->equals($this->node->get('status'))
             && !$this->node->get('is_blocked');
+    }
+
+    /**
+     * @return array
+     */
+    public function jsonSerialize()
+    {
+        return [
+            'roles' => $this->node->get('roles', []),
+        ];
+    }
+
+    public function __toString()
+    {
+        return json_encode($this);
     }
 }
