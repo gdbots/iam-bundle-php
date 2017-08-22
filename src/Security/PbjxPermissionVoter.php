@@ -13,14 +13,10 @@ use Gdbots\Iam\Policy;
 use Gdbots\Schemas\Iam\Mixin\GetRoleBatchRequest\GetRoleBatchRequest;
 use Gdbots\Schemas\Iam\Mixin\GetRoleBatchRequest\GetRoleBatchRequestV1Mixin;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
-use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 
 final class PbjxPermissionVoter implements VoterInterface
 {
-    /** @var AccessDecisionManagerInterface */
-    private $decisionManager;
-
     /** @var Pbjx */
     private $pbjx;
 
@@ -43,13 +39,11 @@ final class PbjxPermissionVoter implements VoterInterface
     private $policies = [];
 
     /**
-     * @param AccessDecisionManagerInterface $decisionManager
-     * @param Pbjx                           $pbjx
+     * @param Pbjx $pbjx
      * @param InMemoryNcr $ncr
      */
-    public function __construct(AccessDecisionManagerInterface $decisionManager, Pbjx $pbjx, InMemoryNcr $ncr)
+    public function __construct(Pbjx $pbjx, InMemoryNcr $ncr)
     {
-        $this->decisionManager = $decisionManager;
         $this->pbjx = $pbjx;
         $this->ncr = $ncr;
     }

@@ -51,9 +51,6 @@ class PbjxPermissionVoterTest extends TestCase
     /** @var  PbjxPermissionVoter */
     protected $pbjxPermissionVoter;
 
-    /** @var  AccessDecisionManagerInterface */
-    protected $decisionManager;
-
     protected function setup()
     {
         $this->locator = new RegisteringServiceLocator();
@@ -78,20 +75,13 @@ class PbjxPermissionVoterTest extends TestCase
         foreach ($roles as $role) {
             $roleNodeRefs[] = NodeRef::fromNode($role);
             $this->ncr->putNode($role);
+            var_dump(json_encode($role));
         }
 
         $user = new User($userNode->addToSet('roles', $roleNodeRefs));
         $token = new ConcreteToken($user, $user->getRoles());
 
-        $this->decisionManager = new class implements AccessDecisionManagerInterface
-        {
-            public function decide(TokenInterface $token, array $attributes, $object = null)
-            {
-                return true;
-            }
-        };
-
-        $voter = new PbjxPermissionVoter($this->decisionManager, $this->pbjx, $this->ncr);
+        $voter = new PbjxPermissionVoter($this->pbjx, $this->ncr);
         $this->assertEquals($expected, $voter->vote($token, 0, $attributes), "Test [{$name}] Failed");
     }
 
@@ -185,8 +175,7 @@ class PbjxPermissionVoterTest extends TestCase
                 'roles'         => [
                     RoleV1::create()
                         ->set('_id', RoleId::fromString('test1'))
-                        ->addToSet('allowed', ['*'])
-                        ->addToSet('denied', []),
+                        ->addToSet('allowed', ['*']),
                 ],
                 'userNode'      => UserV1::create()
                                     ->set('_id', UserId::fromString('a9b1288a-83b7-11e7-bb31-be2e44b06b34')),
