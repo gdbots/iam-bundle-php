@@ -3,9 +3,6 @@ declare(strict_types=1);
 
 namespace Gdbots\Bundle\IamBundle\Security;
 
-use Acme\Schemas\Iam\Request\GetRoleBatchRequestV1;
-use Gdbots\Iam\GetRoleBatchRequestHandler;
-use Gdbots\Ncr\Repository\InMemoryNcr;
 use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbj\SchemaCurie;
 use Gdbots\Pbjx\Pbjx;
@@ -19,9 +16,6 @@ final class PbjxPermissionVoter implements VoterInterface
 {
     /** @var Pbjx */
     private $pbjx;
-
-    /** @var  InMemoryNcr */
-    private $ncr;
 
     /**
      * Array of curies already checked for permission.  Key is the curie of the
@@ -40,12 +34,10 @@ final class PbjxPermissionVoter implements VoterInterface
 
     /**
      * @param Pbjx $pbjx
-     * @param InMemoryNcr $ncr
      */
-    public function __construct(Pbjx $pbjx, InMemoryNcr $ncr)
+    public function __construct(Pbjx $pbjx)
     {
         $this->pbjx = $pbjx;
-        $this->ncr = $ncr;
     }
 
     /**
@@ -89,6 +81,8 @@ final class PbjxPermissionVoter implements VoterInterface
      * @param User $user
      *
      * @return Policy
+     *
+     * @throws \Exception
      */
     private function getPolicy(User $user): Policy
     {
@@ -107,21 +101,20 @@ final class PbjxPermissionVoter implements VoterInterface
             return $policy;
         }
 
-        $request = GetRoleBatchRequestV1::create();
-        $request->addToSet('node_refs', $node->get('roles', []));
-        $handler = new GetRoleBatchRequestHandler($this->ncr);
+        $getRoleBatchRequestSchema = MessageResolver::findOneUsingMixin(GetRoleBatchRequestV1Mixin::create(), 'iam', 'request');
 
-        $response = null;
         try {
-            $response = $handler->handleRequest($request, $this->pbjx);
+            /** @var GetRoleBatchRequest $request */
+            $request = $getRoleBatchRequestSchema->createMessage()->addToSet('node_refs', $node->get('roles', []));
+            $response = $this->pbjx->request($request);
+            $policy = new Policy($response->get('nodes', []));
+
+            // store locally, return it.
+            $this->policies[$key] = $policy;
+
+            return $policy;
         } catch (\Exception $e) {
+            throw new \Exception('Request could not be completed', $e->getCode(), $e);
         }
-
-        $policy = new Policy($response->get('nodes', []));
-
-        // store locally, return it.
-        $this->policies[$key] = $policy;
-
-        return $policy;
     }
 }
