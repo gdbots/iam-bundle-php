@@ -77,10 +77,9 @@ class PbjxPermissionVoterTest extends TestCase
                 ->addToSet('denied', ['acme:blog:command:create-article'])
             ),
         ];
-        $userNode = UserV1::create()
-            ->addToSet('roles', $roleNodeRefs);
 
-        $this->user = new User($userNode->addToSet('roles', $roleNodeRefs));
+        $this->user = new User(UserV1::create()
+            ->addToSet('roles', $roleNodeRefs));
         $this->token = new ConcreteToken($this->user, $this->user->getRoles());
     }
 
