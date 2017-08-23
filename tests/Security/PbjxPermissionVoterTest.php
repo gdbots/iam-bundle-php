@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Gdbots\Tests\Bundle\IamBundle;
 
 use Acme\Schemas\Iam\Node\RoleV1;
+use Gdbots\Schemas\Iam\RoleId;
 use Acme\Schemas\Iam\Node\UserV1;
 use Gdbots\Bundle\IamBundle\Security\PbjxPermissionVoter;
 use Gdbots\Bundle\IamBundle\Security\User;
@@ -71,8 +72,9 @@ class PbjxPermissionVoterTest extends TestCase
 
         $roleNodeRefs = [
             NodeRef::fromNode(RoleV1::create()
-            ->addToSet('allowed', ['acme:blog:command:create-article', ['acme:blog:command:edit-article']])
-            ->addToSet('denied', ['acme:blog:command:create-article'])
+                ->set('_id', RoleId::fromString('test1'))
+                ->addToSet('allowed', ['acme:blog:command:create-article', 'acme:blog:command:edit-article'])
+                ->addToSet('denied', ['acme:blog:command:create-article'])
             ),
         ];
         $userNode = UserV1::create()
@@ -85,5 +87,16 @@ class PbjxPermissionVoterTest extends TestCase
     public function testVote()
     {
         $this->assertEquals(VoterInterface::ACCESS_DENIED, $this->voter->vote($this->token, 0, $this->attributes), "Test Failed");
+    }
+
+    protected function tearDown()
+    {
+        $this->locator = null;
+        $this->pbjx = null;
+        $this->eventStore = null;
+        $this->ncr = null;
+        $this->voter = null;
+        $this->user = null;
+        $this->token = null;
     }
 }
