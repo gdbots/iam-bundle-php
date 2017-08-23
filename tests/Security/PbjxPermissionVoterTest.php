@@ -4,6 +4,9 @@ declare(strict_types=1);
 namespace Gdbots\Tests\Bundle\IamBundle;
 
 use Acme\Schemas\Iam\Node\RoleV1;
+use Acme\Schemas\Iam\Request\GetRoleBatchRequest;
+use Acme\Schemas\Iam\Request\GetRoleBatchRequestV1;
+use Gdbots\Iam\GetRoleBatchRequestHandler;
 use Gdbots\Schemas\Iam\RoleId;
 use Acme\Schemas\Iam\Node\UserV1;
 use Gdbots\Bundle\IamBundle\Security\PbjxPermissionVoter;
@@ -45,13 +48,10 @@ class PbjxPermissionVoterTest extends TestCase
     /** @var InMemoryNcr */
     protected $ncr;
 
-    /** @var  PbjxPermissionVoter */
-    protected $pbjxPermissionVoter;
-
     /** @var User */
     protected $user;
 
-    /** @var PbjxPermissionVoter */
+    /** @var VoterInterface */
     protected $voter;
 
     /** @var  ConcreteToken */
@@ -64,38 +64,46 @@ class PbjxPermissionVoterTest extends TestCase
     {
         $this->locator = new RegisteringServiceLocator();
         $this->pbjx = $this->locator->getPbjx();
-        $this->eventStore = new InMemoryEventStore($this->pbjx);
-        $this->locator->setEventStore($this->eventStore);
         $this->ncr = new InMemoryNcr();
+        $handler = new GetRoleBatchRequestHandler($this->ncr);
+        $this->locator->registerRequestHandler(GetRoleBatchRequestV1::schema()->getCurie(), $handler);
         $this->voter = new PbjxPermissionVoter($this->pbjx);
-        $this->attributes = ['acme:blog:command:create-article'];
 
-        $roleNodeRefs = [
-            NodeRef::fromNode(RoleV1::create()
-                ->set('_id', RoleId::fromString('test1'))
-                ->addToSet('allowed', ['acme:blog:command:create-article', 'acme:blog:command:edit-article'])
-                ->addToSet('denied', ['acme:blog:command:create-article'])
-            ),
-        ];
+        $this->ncr->putNode(
+            RoleV1::create()
+                ->set('_id', RoleId::fromString('super-user'))
+                ->addToSet('allowed', ['test'])
+        );
 
-        $this->user = new User(UserV1::create()
-            ->addToSet('roles', $roleNodeRefs));
-        $this->token = new ConcreteToken($this->user, $this->user->getRoles());
+        $this->ncr->putNode(
+            RoleV1::create()
+                ->set('_id', RoleId::fromString('readonly'))
+                ->addToSet('allowed', ['acme:blog:request:*'])
+                ->addToSet('denied', ['acme:blog:command:*'])
+        );
     }
 
     public function testVote()
     {
-        $this->assertEquals(VoterInterface::ACCESS_DENIED, $this->voter->vote($this->token, 0, $this->attributes), "Test Failed");
+        $user = new User(UserV1::create()
+            ->addToSet('roles', [
+                NodeRef::fromString('acme:role:super-user'),
+            ])
+        );
+        $token = new ConcreteToken($user, $user->getRoles());
+
+        $this->assertEquals(
+            VoterInterface::ACCESS_GRANTED,
+            $this->voter->vote($token, null, ['acme:blog:command:create-article']),
+            'Super user should be able to create-article'
+        );
     }
 
     protected function tearDown()
     {
         $this->locator = null;
         $this->pbjx = null;
-        $this->eventStore = null;
         $this->ncr = null;
         $this->voter = null;
-        $this->user = null;
-        $this->token = null;
     }
 }
