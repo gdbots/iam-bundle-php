@@ -59,6 +59,32 @@ final class PbjxPermissionVoter extends Voter
     }
 
     /**
+     * @param TokenInterface $token
+     * @param mixed $subject
+     * @param array $attributes
+     *
+     * @return int
+     */
+    public function vote(TokenInterface $token, $subject, array $attributes = [])
+    {
+        $vote = VoterInterface::ACCESS_ABSTAIN;
+
+        foreach ($attributes as $attribute) {
+            if (!$this->supports($attribute, $subject)) {
+                continue;
+            }
+
+            $vote = VoterInterface::ACCESS_DENIED;
+
+            if ($this->voteOnAttribute($attribute, $subject, $token) > 0) {
+                return VoterInterface::ACCESS_GRANTED;
+            }
+        }
+
+        return $vote;
+    }
+
+    /**
      *
      * {@inheritdoc}
      */
