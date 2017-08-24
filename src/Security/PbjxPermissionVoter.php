@@ -10,9 +10,10 @@ use Gdbots\Iam\Policy;
 use Gdbots\Schemas\Iam\Mixin\GetRoleBatchRequest\GetRoleBatchRequest;
 use Gdbots\Schemas\Iam\Mixin\GetRoleBatchRequest\GetRoleBatchRequestV1Mixin;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 
-final class PbjxPermissionVoter implements VoterInterface
+final class PbjxPermissionVoter extends Voter
 {
     /** @var Pbjx */
     private $pbjx;
@@ -41,39 +42,45 @@ final class PbjxPermissionVoter implements VoterInterface
     }
 
     /**
-     * fixme: permission map needs to be driven by repository, static for now for dev
      *
      * {@inheritdoc}
      */
-    public function vote(TokenInterface $token, $subject, array $attributes)
+    protected function supports($attribute, $subject)
     {
-        $curie = current($attributes);
-
-        if (!is_string($curie)) {
-            return VoterInterface::ACCESS_ABSTAIN;
+        if (!is_string($attribute)) {
+            return false;
         }
 
-        if (!preg_match(SchemaCurie::VALID_PATTERN, $curie)) {
-            return VoterInterface::ACCESS_ABSTAIN;
+        if (!preg_match(SchemaCurie::VALID_PATTERN, $attribute)) {
+            return false;
         }
 
-        if (isset($this->checked[$curie])) {
-            return $this->checked[$curie];
+        return true;
+    }
+
+    /**
+     *
+     * {@inheritdoc}
+     */
+    public function voteOnAttribute($attribute, $subject, TokenInterface $token)
+    {
+        if (isset($this->checked[$attribute])) {
+            return $this->checked[$attribute];
         }
 
         $user = $token->getUser();
         if (!$user instanceof User) {
-            $this->checked[$curie] = VoterInterface::ACCESS_DENIED;
+            $this->checked[$attribute] = VoterInterface::ACCESS_DENIED;
             return VoterInterface::ACCESS_DENIED;
         }
 
         $policy = $this->getPolicy($user);
-        if ($policy->isGranted($curie)) {
-            $this->checked[$curie] = VoterInterface::ACCESS_GRANTED;
+        if ($policy->isGranted($attribute)) {
+            $this->checked[$attribute] = VoterInterface::ACCESS_GRANTED;
             return VoterInterface::ACCESS_GRANTED;
         }
 
-        $this->checked[$curie] = VoterInterface::ACCESS_DENIED;
+        $this->checked[$attribute] = VoterInterface::ACCESS_DENIED;
         return VoterInterface::ACCESS_DENIED;
     }
 
