@@ -22,7 +22,7 @@ final class PbjxPermissionVoter extends Voter
      * Array of curies already checked for permission.  Key is the curie of the
      * message, value is the result, @see VoterInterface
      *
-     * @var int[]
+     * @var bool[]
      */
     private $checked = [];
 
@@ -59,36 +59,10 @@ final class PbjxPermissionVoter extends Voter
     }
 
     /**
-     * @param TokenInterface $token
-     * @param mixed $subject
-     * @param array $attributes
-     *
-     * @return int
-     */
-    public function vote(TokenInterface $token, $subject, array $attributes = [])
-    {
-        $vote = VoterInterface::ACCESS_ABSTAIN;
-
-        foreach ($attributes as $attribute) {
-            if (!$this->supports($attribute, $subject)) {
-                continue;
-            }
-
-            $vote = VoterInterface::ACCESS_DENIED;
-
-            if ($this->voteOnAttribute($attribute, $subject, $token) > 0) {
-                return VoterInterface::ACCESS_GRANTED;
-            }
-        }
-
-        return $vote;
-    }
-
-    /**
      *
      * {@inheritdoc}
      */
-    public function voteOnAttribute($attribute, $subject, TokenInterface $token)
+    protected function voteOnAttribute($attribute, $subject, TokenInterface $token)
     {
         if (isset($this->checked[$attribute])) {
             return $this->checked[$attribute];
@@ -96,18 +70,10 @@ final class PbjxPermissionVoter extends Voter
 
         $user = $token->getUser();
         if (!$user instanceof User) {
-            $this->checked[$attribute] = VoterInterface::ACCESS_DENIED;
-            return VoterInterface::ACCESS_DENIED;
+            return $this->checked[$attribute] = false;
         }
 
-        $policy = $this->getPolicy($user);
-        if ($policy->isGranted($attribute)) {
-            $this->checked[$attribute] = VoterInterface::ACCESS_GRANTED;
-            return VoterInterface::ACCESS_GRANTED;
-        }
-
-        $this->checked[$attribute] = VoterInterface::ACCESS_DENIED;
-        return VoterInterface::ACCESS_DENIED;
+        return $this->checked[$attribute] = $this->getPolicy($user)->isGranted($attribute);
     }
 
     /**
