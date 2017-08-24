@@ -3,11 +3,11 @@ declare(strict_types=1);
 
 namespace Gdbots\Bundle\IamBundle\Security;
 
+use Acme\Schemas\Iam\Request\GetRoleBatchRequestV1;
 use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbj\SchemaCurie;
 use Gdbots\Pbjx\Pbjx;
 use Gdbots\Iam\Policy;
-use Gdbots\Schemas\Iam\Mixin\GetRoleBatchRequest\GetRoleBatchRequest;
 use Gdbots\Schemas\Iam\Mixin\GetRoleBatchRequest\GetRoleBatchRequestV1Mixin;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
@@ -27,7 +27,7 @@ final class PbjxPermissionVoter extends Voter
     private $checked = [];
 
     /**
-     * Array of policies keys by user node ref.
+     * Array of policies, keys by user node ref.
      *
      * @var Policy[]
      */
@@ -103,7 +103,7 @@ final class PbjxPermissionVoter extends Voter
         $getRoleBatchRequestSchema = MessageResolver::findOneUsingMixin(GetRoleBatchRequestV1Mixin::create(), 'iam', 'request');
 
         try {
-            /** @var GetRoleBatchRequest $request */
+            /** @var GetRoleBatchRequestV1 $request */
             $request = $getRoleBatchRequestSchema->createMessage()->addToSet('node_refs', $node->get('roles', []));
             $response = $this->pbjx->request($request);
             $policy = new Policy($response->get('nodes', []));
@@ -113,7 +113,7 @@ final class PbjxPermissionVoter extends Voter
 
             return $policy;
         } catch (\Exception $e) {
-            throw new \Exception('Request could not be completed', $e->getCode(), $e);
+            throw new \Exception('GetRoleBatchRequest could not be completed', $e->getCode(), $e);
         }
     }
 }

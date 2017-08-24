@@ -120,7 +120,7 @@ class PbjxPermissionVoterTest extends TestCase
                     NodeRef::fromString('acme:role:editor'),
                 ],
                 'attributes'    => ['acme-blog-create-article'],
-                'message'       => 'Curie must follow Schemacurie format',
+                'message'       => 'Curie is invalid, must follow Schemacurie format',
                 'expected'      => VoterInterface::ACCESS_ABSTAIN,
             ],
 
@@ -129,7 +129,7 @@ class PbjxPermissionVoterTest extends TestCase
                     NodeRef::fromString('acme:role:editor'),
                 ],
                 'attributes'    => ['ROLE_SUPER_USER'],
-                'message'       => 'Curie must follow Schemacurie format',
+                'message'       => 'Role passed instead of Schemacurie',
                 'expected'      => VoterInterface::ACCESS_ABSTAIN,
             ]
         ];
