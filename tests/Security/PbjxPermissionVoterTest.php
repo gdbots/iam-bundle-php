@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace Gdbots\Tests\Bundle\IamBundle;
 
 use Acme\Schemas\Iam\Node\RoleV1;
-use Acme\Schemas\Iam\Request\GetRoleBatchRequest;
 use Acme\Schemas\Iam\Request\GetRoleBatchRequestV1;
 use Gdbots\Iam\GetRoleBatchRequestHandler;
 use Gdbots\Schemas\Iam\RoleId;
@@ -12,7 +11,6 @@ use Acme\Schemas\Iam\Node\UserV1;
 use Gdbots\Bundle\IamBundle\Security\PbjxPermissionVoter;
 use Gdbots\Bundle\IamBundle\Security\User;
 use Gdbots\Pbjx\Pbjx;
-use Gdbots\Pbjx\EventStore\InMemoryEventStore;
 use Gdbots\Pbjx\RegisteringServiceLocator;
 use Gdbots\Ncr\Repository\InMemoryNcr;
 use Gdbots\Schemas\Ncr\NodeRef;
@@ -42,23 +40,11 @@ class PbjxPermissionVoterTest extends TestCase
     /** @var Pbjx */
     protected $pbjx;
 
-    /** @var InMemoryEventStore */
-    protected $eventStore;
-
     /** @var InMemoryNcr */
     protected $ncr;
 
-    /** @var User */
-    protected $user;
-
     /** @var VoterInterface */
     protected $voter;
-
-    /** @var  ConcreteToken */
-    protected $token;
-
-    /** @var  array */
-    protected $attributes;
 
     protected function setup()
     {
@@ -72,31 +58,72 @@ class PbjxPermissionVoterTest extends TestCase
         $this->ncr->putNode(
             RoleV1::create()
                 ->set('_id', RoleId::fromString('super-user'))
-                ->addToSet('allowed', ['test'])
+                ->addToSet('allowed', ['*'])
         );
 
         $this->ncr->putNode(
             RoleV1::create()
-                ->set('_id', RoleId::fromString('readonly'))
+                ->set('_id', RoleId::fromString('subscriber'))
+                ->addToSet('allowed', ['acme:blog:request:*'])
+                ->addToSet('denied', ['acme:blog:command:*'])
+        );
+
+        $this->ncr->putNode(
+            RoleV1::create()
+                ->set('_id', RoleId::fromString('editor'))
                 ->addToSet('allowed', ['acme:blog:request:*'])
                 ->addToSet('denied', ['acme:blog:command:*'])
         );
     }
 
-    public function testVote()
+    /**
+     * @dataProvider getDataSamples
+     *
+     * @param array $roles
+     * @param array $attributes
+     * @param string $message
+     * @param int $expected
+     */
+    public function testVote(array $roles = [], array $attributes = [], string $message, int $expected)
     {
         $user = new User(UserV1::create()
-            ->addToSet('roles', [
-                NodeRef::fromString('acme:role:super-user'),
-            ])
+            ->addToSet('roles', $roles)
         );
         $token = new ConcreteToken($user, $user->getRoles());
 
-        $this->assertEquals(
-            VoterInterface::ACCESS_GRANTED,
-            $this->voter->vote($token, null, ['acme:blog:command:create-article']),
-            'Super user should be able to create-article'
-        );
+        $this->assertEquals($expected, $this->voter->vote($token, null, $attributes), $message);
+    }
+
+    public function getDataSamples()
+    {
+        return [
+            [
+                'roles'         => [
+                    NodeRef::fromString('acme:role:super-user'),
+                ],
+                'attributes'    => ['acme:blog:command:create-article'],
+                'message'       => 'Super user should be able to create-article',
+                'expected'      => VoterInterface::ACCESS_GRANTED,
+            ],
+
+            [
+                'roles'         => [
+                    NodeRef::fromString('acme:role:subscriber'),
+                ],
+                'attributes'    => ['acme:blog:command:create-article'],
+                'message'       => 'Subscriber shouldn\'t be able to create-article',
+                'expected'      => VoterInterface::ACCESS_DENIED,
+            ],
+
+            [
+                'roles'         => [
+                    NodeRef::fromString('acme:role:editor'),
+                ],
+                'attributes'    => ['acme-blog-create-article'],
+                'message'       => 'Curie must follow Schemacurie format',
+                'expected'      => VoterInterface::ACCESS_ABSTAIN,
+            ]
+        ];
     }
 
     protected function tearDown()
