@@ -101,19 +101,19 @@ final class PbjxPermissionVoter extends Voter
         }
 
         $getRoleBatchRequestSchema = MessageResolver::findOneUsingMixin(GetRoleBatchRequestV1Mixin::create(), 'iam', 'request');
+        /** @var GetRoleBatchRequestV1 $request */
+        $request = $getRoleBatchRequestSchema->createMessage()->addToSet('node_refs', $node->get('roles', []));
 
         try {
-            /** @var GetRoleBatchRequestV1 $request */
-            $request = $getRoleBatchRequestSchema->createMessage()->addToSet('node_refs', $node->get('roles', []));
             $response = $this->pbjx->request($request);
-            $policy = new Policy($response->get('nodes', []));
-
-            // store locally, return it.
-            $this->policies[$key] = $policy;
-
-            return $policy;
         } catch (\Exception $e) {
-            throw new \Exception('GetRoleBatchRequest could not be completed', $e->getCode(), $e);
+            return new Policy([]);
         }
+
+        $policy = new Policy($response->get('nodes', []));
+        // store locally, return it.
+        $this->policies[$key] = $policy;
+
+        return $policy;
     }
 }
