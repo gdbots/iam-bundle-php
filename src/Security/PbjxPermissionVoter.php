@@ -106,14 +106,14 @@ final class PbjxPermissionVoter extends Voter
 
         try {
             $response = $this->pbjx->request($request);
+            $policy = new Policy($response->get('nodes', []));
+            // store locally, return it.
+            $this->policies[$key] = $policy;
+
+            return $policy;
         } catch (\Exception $e) {
-            return new Policy([]);
         }
 
-        $policy = new Policy($response->get('nodes', []));
-        // store locally, return it.
-        $this->policies[$key] = $policy;
-
-        return $policy;
+        return new Policy([]);
     }
 }
