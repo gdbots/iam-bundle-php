@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Gdbots\Bundle\IamBundle\Security;
 
@@ -34,8 +34,9 @@ class User implements AdvancedUserInterface, EquatableInterface
         $this->nodeRef = NodeRef::fromNode($node);
         $this->userRef = $node->generateMessageRef();
 
+        /** @var NodeRef $role */
         foreach ($this->node->get('roles', []) as $role) {
-            $this->roles[] = 'ROLE_' . $role;
+            $this->roles[] = 'ROLE_' . strtoupper(str_replace('-', '_', $role->getId()));
         }
 
         if ($this->node->get('is_staff')) {
@@ -156,7 +157,6 @@ class User implements AdvancedUserInterface, EquatableInterface
     public function isEnabled()
     {
         return NodeStatus::PUBLISHED()->equals($this->node->get('status'))
-            && $this->node->get('is_staff')
             && !$this->node->get('is_blocked');
     }
 }

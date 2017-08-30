@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Gdbots\Bundle\IamBundle\Security;
 
@@ -55,12 +55,9 @@ final class PbjxPermissionValidator implements EventSubscriber
             }
         }
 
-        if ($request->attributes->getBoolean('_authenticating_user')) {
-            /*
-             * when attempting to load the user for authentication, we can't do a permission check.
-             * @see Auth0UserProvider
-             */
-            $request->attributes->remove('_authenticating_user');
+        if ($request->attributes->getBoolean('iam_bypass_permissions')) {
+            // when attempting to load the user for authentication, we can't do a permission check.
+            $request->attributes->remove('iam_bypass_permissions');
             return;
         }
 
