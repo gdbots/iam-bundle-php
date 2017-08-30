@@ -71,8 +71,7 @@ class PbjxPermissionVoterTest extends TestCase
         $this->ncr->putNode(
             RoleV1::create()
                 ->set('_id', RoleId::fromString('editor'))
-                ->addToSet('allowed', ['acme:blog:request:*'])
-                ->addToSet('denied', ['acme:blog:command:*'])
+                ->addToSet('allowed', ['acme:blog:*'])
         );
     }
 
@@ -110,6 +109,16 @@ class PbjxPermissionVoterTest extends TestCase
                 ],
                 'attributes' => ['acme:blog:command:create-article'],
                 'message'    => 'Subscriber shouldn\'t be able to create-article',
+                'expected'   => VoterInterface::ACCESS_DENIED,
+            ],
+
+            [
+                'roles'      => [
+                    NodeRef::fromString('acme:role:subscriber'),
+                    NodeRef::fromString('acme:role:editor'),
+                ],
+                'attributes' => ['acme:blog:command:delete-blog'],
+                'message'    => 'Denied rules take precedence',
                 'expected'   => VoterInterface::ACCESS_DENIED,
             ],
 
