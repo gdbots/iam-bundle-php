@@ -1,18 +1,18 @@
 <?php
 declare(strict_types=1);
 
-namespace Gdbots\Tests\Bundle\IamBundle;
+namespace Gdbots\Tests\Bundle\IamBundle\Security;
 
 use Acme\Schemas\Iam\Node\RoleV1;
-use Acme\Schemas\Iam\Request\GetRoleBatchRequestV1;
-use Gdbots\Iam\GetRoleBatchRequestHandler;
-use Gdbots\Schemas\Iam\RoleId;
 use Acme\Schemas\Iam\Node\UserV1;
+use Acme\Schemas\Iam\Request\GetRoleBatchRequestV1;
 use Gdbots\Bundle\IamBundle\Security\PbjxPermissionVoter;
 use Gdbots\Bundle\IamBundle\Security\User;
+use Gdbots\Iam\GetRoleBatchRequestHandler;
+use Gdbots\Ncr\Repository\InMemoryNcr;
 use Gdbots\Pbjx\Pbjx;
 use Gdbots\Pbjx\RegisteringServiceLocator;
-use Gdbots\Ncr\Repository\InMemoryNcr;
+use Gdbots\Schemas\Iam\RoleId;
 use Gdbots\Schemas\Ncr\NodeRef;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Security\Core\Authentication\Token\AbstractToken;
@@ -79,16 +79,14 @@ class PbjxPermissionVoterTest extends TestCase
     /**
      * @dataProvider getDataSamples
      *
-     * @param array $roles
-     * @param array $attributes
+     * @param array  $roles
+     * @param array  $attributes
      * @param string $message
-     * @param int $expected
+     * @param int    $expected
      */
     public function testVote(array $roles = [], array $attributes = [], string $message, int $expected)
     {
-        $user = new User(UserV1::create()
-            ->addToSet('roles', $roles)
-        );
+        $user = new User(UserV1::create()->addToSet('roles', $roles));
         $token = new ConcreteToken($user, $user->getRoles());
 
         $this->assertEquals($expected, $this->voter->vote($token, null, $attributes), $message);
@@ -98,40 +96,40 @@ class PbjxPermissionVoterTest extends TestCase
     {
         return [
             [
-                'roles'         => [
+                'roles'      => [
                     NodeRef::fromString('acme:role:super-user'),
                 ],
-                'attributes'    => ['acme:blog:command:create-article'],
-                'message'       => 'Super user should be able to create-article',
-                'expected'      => VoterInterface::ACCESS_GRANTED,
+                'attributes' => ['acme:blog:command:create-article'],
+                'message'    => 'Super user should be able to create-article',
+                'expected'   => VoterInterface::ACCESS_GRANTED,
             ],
 
             [
-                'roles'         => [
+                'roles'      => [
                     NodeRef::fromString('acme:role:subscriber'),
                 ],
-                'attributes'    => ['acme:blog:command:create-article'],
-                'message'       => 'Subscriber shouldn\'t be able to create-article',
-                'expected'      => VoterInterface::ACCESS_DENIED,
+                'attributes' => ['acme:blog:command:create-article'],
+                'message'    => 'Subscriber shouldn\'t be able to create-article',
+                'expected'   => VoterInterface::ACCESS_DENIED,
             ],
 
             [
-                'roles'         => [
+                'roles'      => [
                     NodeRef::fromString('acme:role:editor'),
                 ],
-                'attributes'    => ['acme-blog-create-article'],
-                'message'       => 'Curie is invalid, must follow Schemacurie format',
-                'expected'      => VoterInterface::ACCESS_ABSTAIN,
+                'attributes' => ['acme-blog-create-article'],
+                'message'    => 'Curie is invalid, must follow Schemacurie format',
+                'expected'   => VoterInterface::ACCESS_ABSTAIN,
             ],
 
             [
-                'roles'         => [
+                'roles'      => [
                     NodeRef::fromString('acme:role:editor'),
                 ],
-                'attributes'    => ['ROLE_SUPER_USER'],
-                'message'       => 'Role passed instead of Schemacurie',
-                'expected'      => VoterInterface::ACCESS_ABSTAIN,
-            ]
+                'attributes' => ['ROLE_SUPER_USER'],
+                'message'    => 'Role passed instead of Schemacurie',
+                'expected'   => VoterInterface::ACCESS_ABSTAIN,
+            ],
         ];
     }
 

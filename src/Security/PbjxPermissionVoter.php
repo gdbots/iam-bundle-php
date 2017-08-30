@@ -3,15 +3,14 @@ declare(strict_types=1);
 
 namespace Gdbots\Bundle\IamBundle\Security;
 
-use Acme\Schemas\Iam\Request\GetRoleBatchRequestV1;
+use Gdbots\Iam\Policy;
 use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbj\SchemaCurie;
 use Gdbots\Pbjx\Pbjx;
-use Gdbots\Iam\Policy;
+use Gdbots\Schemas\Iam\Mixin\GetRoleBatchRequest\GetRoleBatchRequest;
 use Gdbots\Schemas\Iam\Mixin\GetRoleBatchRequest\GetRoleBatchRequestV1Mixin;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
-use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 
 final class PbjxPermissionVoter extends Voter
 {
@@ -20,7 +19,7 @@ final class PbjxPermissionVoter extends Voter
 
     /**
      * Array of curies already checked for permission.  Key is the curie of the
-     * message, value is the result, @see VoterInterface
+     * message, value is the result
      *
      * @var bool[]
      */
@@ -42,7 +41,6 @@ final class PbjxPermissionVoter extends Voter
     }
 
     /**
-     *
      * {@inheritdoc}
      */
     protected function supports($attribute, $subject)
@@ -59,7 +57,6 @@ final class PbjxPermissionVoter extends Voter
     }
 
     /**
-     *
      * {@inheritdoc}
      */
     protected function voteOnAttribute($attribute, $subject, TokenInterface $token)
@@ -85,7 +82,6 @@ final class PbjxPermissionVoter extends Voter
      */
     private function getPolicy(User $user): Policy
     {
-        // store array of policies by user node ref...
         $key = $user->getUserNodeRef()->toString();
         if (isset($this->policies[$key])) {
             return $this->policies[$key];
@@ -93,27 +89,20 @@ final class PbjxPermissionVoter extends Voter
 
         $node = $user->getUserNode();
         if (!$node->has('roles')) {
-            // make a policy anyways, then stores in this->policies and return it.
-            $policy = new Policy([]);
-            $this->policies[$key] = $policy;
-
-            return $policy;
+            // make an empty policy with no permissions
+            return $this->policies[$key] = new Policy();
         }
 
         $getRoleBatchRequestSchema = MessageResolver::findOneUsingMixin(GetRoleBatchRequestV1Mixin::create(), 'iam', 'request');
-        /** @var GetRoleBatchRequestV1 $request */
-        $request = $getRoleBatchRequestSchema->createMessage()->addToSet('node_refs', $node->get('roles', []));
+        /** @var GetRoleBatchRequest $request */
+        $request = $getRoleBatchRequestSchema->createMessage()->addToSet('node_refs', $node->get('roles'));
 
         try {
             $response = $this->pbjx->request($request);
-            $policy = new Policy($response->get('nodes', []));
-            // store locally, return it.
-            $this->policies[$key] = $policy;
-
-            return $policy;
+            return $this->policies[$key] = new Policy($response->get('nodes', []));
         } catch (\Exception $e) {
         }
 
-        return new Policy([]);
+        return $this->policies[$key] = new Policy();
     }
 }
