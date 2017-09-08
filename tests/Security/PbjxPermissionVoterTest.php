@@ -15,6 +15,8 @@ use Gdbots\Pbjx\RegisteringServiceLocator;
 use Gdbots\Schemas\Iam\RoleId;
 use Gdbots\Schemas\Ncr\NodeRef;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Authentication\Token\AbstractToken;
 use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 
@@ -53,7 +55,9 @@ class PbjxPermissionVoterTest extends TestCase
         $this->ncr = new InMemoryNcr();
         $handler = new GetRoleBatchRequestHandler($this->ncr);
         $this->locator->registerRequestHandler(GetRoleBatchRequestV1::schema()->getCurie(), $handler);
-        $this->voter = new PbjxPermissionVoter($this->pbjx);
+        $requestStack = new RequestStack();
+        $requestStack->push(new Request());
+        $this->voter = new PbjxPermissionVoter($this->pbjx, $requestStack);
 
         $this->ncr->putNode(
             RoleV1::create()
