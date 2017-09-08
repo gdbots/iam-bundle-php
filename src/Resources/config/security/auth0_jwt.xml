@@ -9,11 +9,6 @@
     <parameter key="env(AUTH0_API_IDENTIFIER)"/>
     <parameter key="env(AUTH0_AUTHORIZED_ISSUER)"/>
     <parameter key="env(AUTH0_SIGNING_SECRET)"/>
-
-    <!-- tmp, moving to db -->
-    <parameter key="permissions_map" type="collection">
-      <parameter key="%app_vendor%:iam:command:create-user">ROLE_SUPER_USER</parameter>
-    </parameter>
   </parameters>
 
   <services>
@@ -45,6 +40,7 @@
 
     <service id="gdbots_iam.security.pbjx_permission_voter" class="Gdbots\Bundle\IamBundle\Security\PbjxPermissionVoter" public="false">
       <argument type="service" id="pbjx"/>
+      <argument type="service" id="request_stack"/>
       <tag name="security.voter"/>
     </service>
 

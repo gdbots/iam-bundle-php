@@ -9,6 +9,7 @@ use Gdbots\Pbj\SchemaCurie;
 use Gdbots\Pbjx\Pbjx;
 use Gdbots\Schemas\Iam\Mixin\GetRoleBatchRequest\GetRoleBatchRequest;
 use Gdbots\Schemas\Iam\Mixin\GetRoleBatchRequest\GetRoleBatchRequestV1Mixin;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
@@ -16,6 +17,9 @@ final class PbjxPermissionVoter extends Voter
 {
     /** @var Pbjx */
     private $pbjx;
+
+    /** @var RequestStack */
+    private $requestStack;
 
     /**
      * Array of curies already checked for permission.  Key is the curie of the
@@ -33,11 +37,13 @@ final class PbjxPermissionVoter extends Voter
     private $policies = [];
 
     /**
-     * @param Pbjx $pbjx
+     * @param Pbjx         $pbjx
+     * @param RequestStack $requestStack
      */
-    public function __construct(Pbjx $pbjx)
+    public function __construct(Pbjx $pbjx, RequestStack $requestStack)
     {
         $this->pbjx = $pbjx;
+        $this->requestStack = $requestStack;
     }
 
     /**
@@ -77,8 +83,6 @@ final class PbjxPermissionVoter extends Voter
      * @param User $user
      *
      * @return Policy
-     *
-     * @throws \Exception
      */
     private function getPolicy(User $user): Policy
     {
@@ -93,16 +97,21 @@ final class PbjxPermissionVoter extends Voter
             return $this->policies[$key] = new Policy();
         }
 
+        $symfonyRequest = $this->requestStack->getCurrentRequest();
+        $symfonyRequest->attributes->set('iam_bypass_permissions', true);
+
         $getRoleBatchRequestSchema = MessageResolver::findOneUsingMixin(GetRoleBatchRequestV1Mixin::create(), 'iam', 'request');
         /** @var GetRoleBatchRequest $request */
         $request = $getRoleBatchRequestSchema->createMessage()->addToSet('node_refs', $node->get('roles'));
 
         try {
             $response = $this->pbjx->request($request);
-            return $this->policies[$key] = new Policy($response->get('nodes', []));
+            $this->policies[$key] = new Policy($response->get('nodes', []));
         } catch (\Exception $e) {
+            $this->policies[$key] = new Policy();
         }
 
-        return $this->policies[$key] = new Policy();
+        $symfonyRequest->attributes->remove('iam_bypass_permissions');
+        return $this->policies[$key];
     }
 }
