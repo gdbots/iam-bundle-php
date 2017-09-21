@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<container xmlns="http://symfony.com/schema/dic/services"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+  <parameters>
+    <parameter key="env(COGNITO_API_IDENTIFIER)"/>
+    <parameter key="env(COGNITO_AUTHORIZED_ISSUER)"/>
+    <parameter key="env(COGNITO_SIGNING_SECRET)"/>
+  </parameters>
+
+  <services>
+    <service id="gdbots_iam.cognito_controller" class="Gdbots\Bundle\IamBundle\Controller\CognitoController">
+      <call method="setContainer">
+        <argument type="service" id="service_container"/>
+      </call>
+    </service>
+
+    <service id="gdbots_iam.security.cognito.jwt_authenticator" class="Gdbots\Bundle\IamBundle\Security\Jwt\CognitoJwtAuthenticator" public="false">
+      <argument type="service" id="gdbots_iam.security.cognito.jwt_decoder"/>
+    </service>
+
+    <service id="gdbots_iam.security.cognito.cache_handler" class="Gdbots\Bundle\IamBundle\Security\Jwt\CognitoCacheHandler" public="false">
+      <argument type="service" id="cache.app"/>
+    </service>
+
+    <service id="gdbots_iam.security.cognito.jwt_decoder" class="Gdbots\Bundle\IamBundle\Security\Jwt\CognitoJwtDecoder" public="false">
+      <argument type="service" id="gdbots_iam.security.cognito.cache_handler"/>
+      <argument>%env(COGNITO_API_IDENTIFIER)%</argument>
+      <argument>%env(COGNITO_AUTHORIZED_ISSUER)%</argument>
+      <argument>%env(COGNITO_SIGNING_SECRET)%</argument>
+    </service>
+
+    <service id="gdbots_iam.security.cognito.user_provider" class="Gdbots\Bundle\IamBundle\Security\Jwt\CognitoUserProvider">
+      <argument type="service" id="pbjx"/>
+      <argument type="service" id="request_stack"/>
+    </service>
+
+    <service id="gdbots_iam.security.pbjx_permission_voter" class="Gdbots\Bundle\IamBundle\Security\PbjxPermissionVoter" public="false">
+      <argument type="service" id="pbjx"/>
+      <argument type="service" id="request_stack"/>
+      <tag name="security.voter"/>
+    </service>
+
+    <!-- binders -->
+    <service id="gdbots_iam.security.ctx_user_ref_binder" class="Gdbots\Bundle\IamBundle\Binder\CtxUserRefBinder">
+      <argument type="service" id="security.token_storage"/>
+      <tag name="pbjx.event_subscriber"/>
+    </service>
+
+    <!-- validators -->
+    <service id="gdbots_iam.security.pbjx_permission_validator" class="Gdbots\Bundle\IamBundle\Security\PbjxPermissionValidator">
+      <argument type="service" id="request_stack"/>
+      <argument type="service" id="security.authorization_checker"/>
+      <tag name="pbjx.event_subscriber"/>
+    </service>
+  </services>
+
+</container>
