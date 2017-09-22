@@ -57,8 +57,7 @@ class CognitoUserProvider implements JwtUserProvider
      */
     public function loadUserByJwt(\stdClass $jwt): UserInterface
     {
-        $userRefProperty = ($jwt->aud ?: '') . 'ctx_user_ref';
-        $ctxUserRef = $jwt->$userRefProperty ?? null;
+        $ctxUserRef = 'tmz:iam:node:user:' . $jwt->username;
 
         if (!empty($ctxUserRef)) {
             return $this->loadByNodeRef(NodeRef::fromMessageRef(MessageRef::fromString($ctxUserRef)));

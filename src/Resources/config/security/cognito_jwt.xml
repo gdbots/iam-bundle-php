@@ -6,7 +6,8 @@
   <parameters>
     <parameter key="env(COGNITO_API_IDENTIFIER)"/>
     <parameter key="env(COGNITO_AUTHORIZED_ISSUER)"/>
-    <parameter key="env(COGNITO_SIGNING_SECRET)"/>
+    <parameter key="env(COGNITO_CLIENT_ID)"/>
+    <parameter key="env(COGNITO_POOL_ID)"/>
   </parameters>
 
   <services>
@@ -28,7 +29,8 @@
       <argument type="service" id="gdbots_iam.security.cognito.cache_handler"/>
       <argument>%env(COGNITO_API_IDENTIFIER)%</argument>
       <argument>%env(COGNITO_AUTHORIZED_ISSUER)%</argument>
-      <argument>%env(COGNITO_SIGNING_SECRET)%</argument>
+      <argument>%env(COGNITO_CLIENT_ID)%</argument>
+      <argument>%env(COGNITO_POOL_ID)%</argument>
     </service>
 
     <service id="gdbots_iam.security.cognito.user_provider" class="Gdbots\Bundle\IamBundle\Security\Jwt\CognitoUserProvider">

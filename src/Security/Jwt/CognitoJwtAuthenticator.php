@@ -47,7 +47,7 @@ class CognitoJwtAuthenticator implements SimplePreAuthenticatorInterface, Authen
         try {
             $token = $this->decoder->decode($jwt);
         } catch (\Exception $e) {
-            throw new BadCredentialsException('Invalid token.');
+            throw new BadCredentialsException($e->getMessage());
         }
 
         return new PreAuthenticatedToken('anon.', $token, $providerKey);
