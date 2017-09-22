@@ -3,9 +3,8 @@ declare(strict_types=1);
 
 namespace Gdbots\Bundle\IamBundle\Security\Jwt;
 
-use Auth0\SDK\Helpers\Cache\CacheHandler;
-use Auth0\SDK\JWTVerifier;
 use DateTime;
+use Gdbots\Bundle\IamBundle\Security\Jwt\Helpers\CacheHandler;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Jose\Factory\JWKFactory;
@@ -14,11 +13,11 @@ use Symfony\Component\Security\Core\Exception\AuthenticationException;
 
 class CognitoJwtDecoder
 {
-    /** @var JWTVerifier */
-    protected $verifier;
-
     /** @var string */
     protected $authorizedIssuer;
+
+    /** @var CacheHandler */
+    protected $cache;
 
     /** @var string */
     protected $clientId;
@@ -43,30 +42,21 @@ class CognitoJwtDecoder
 
     /**
      * @param CacheHandler $cache
-     * @param string       $apiIdentifier
      * @param string       $authorizedIssuer
      * @param string       $clientId
      * @param string       $poolId
      */
     public function __construct(
         CacheHandler $cache,
-        string $apiIdentifier,
         string $authorizedIssuer,
         string $clientId,
         string $poolId
     )
     {
         $this->authorizedIssuer = $authorizedIssuer;
+        $this->cache = $cache;
         $this->clientId = $clientId;
         $this->poolId = $poolId;
-        $this->verifier = new JWTVerifier([
-            'cache' => $cache,
-            'supported_algs' => ['RS256', 'HS256'],
-            'valid_audiences' => [$apiIdentifier],
-            'authorized_iss' => [$authorizedIssuer],
-            'client_secret' => 'sosecret',
-            'secret_base64_encoded' => false,
-        ]);
     }
 
     /**

@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Gdbots\Bundle\IamBundle\Security\Jwt;
 
-use Auth0\SDK\Helpers\Cache\CacheHandler;
+use Gdbots\Bundle\IamBundle\Security\Jwt\Helpers\CacheHandler;
 use Psr\Cache\CacheItemPoolInterface;
 
 class CognitoCacheHandler implements CacheHandler
