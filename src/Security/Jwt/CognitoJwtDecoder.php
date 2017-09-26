@@ -22,9 +22,6 @@ class CognitoJwtDecoder
     /** @var string */
     protected $clientId;
 
-    /** @var string */
-    protected $poolId;
-
     /**
      * When checking nbf, iat or expiration times,
      * we want to provide some extra leeway time to
@@ -44,19 +41,16 @@ class CognitoJwtDecoder
      * @param CacheHandler $cache
      * @param string       $authorizedIssuer
      * @param string       $clientId
-     * @param string       $poolId
      */
     public function __construct(
         CacheHandler $cache,
         string $authorizedIssuer,
-        string $clientId,
-        string $poolId
+        string $clientId
     )
     {
         $this->authorizedIssuer = $authorizedIssuer;
         $this->cache = $cache;
         $this->clientId = $clientId;
-        $this->poolId = $poolId;
     }
 
     /**
@@ -74,6 +68,33 @@ class CognitoJwtDecoder
             $input .= str_repeat('=', $padlen);
         }
         return base64_decode(strtr($input, '-_', '+/'));
+    }
+
+    /**
+     * @param string $url
+     *
+     * @return \Jose\Object\JWKInterface|\Jose\Object\JWKSetInterface
+     */
+    public function fetchJwkSet($url) {
+
+        if (($jwkSet = $this->cache->get($url)) === null) {
+
+            $client = new Client([
+                'base_uri' => $url
+            ]);
+
+            try {
+                $response = $client->get('');
+            } catch (RequestException $e) {
+                throw $e;
+            }
+
+            $jwkSet = JWKFactory::createFromValues(json_decode($response->getBody()->getContents(), true));
+
+            $this->cache->set($url, $jwkSet);
+        }
+
+        return $jwkSet;
     }
 
     /**
@@ -114,17 +135,7 @@ class CognitoJwtDecoder
             throw new AuthenticationException('Expired token');
         }
 
-        $client = new Client([
-            'base_uri' => $this->authorizedIssuer
-        ]);
-
-        try {
-            $response = $client->request('GET', $this->poolId . '/.well-known/jwks.json');
-        } catch (RequestException $e) {
-            throw $e;
-        }
-
-        $jwkSet = JWKFactory::createFromValues(json_decode($response->getBody()->getContents(), true));
+        $jwkSet = $this->fetchJwkSet($this->authorizedIssuer . '/.well-known/jwks.json');
 
         $loader = new Loader();
 
@@ -136,12 +147,10 @@ class CognitoJwtDecoder
                 $signature_index
             );
         } catch(\Exception $e) {
-            throw new AuthenticationException($e->getMessage());
+            throw new AuthenticationException('Invalid token.');
         }
 
         // if we got this far without an exception, then the jwt is valid and trusted
-
-        //throw new AuthenticationException(json_encode($payload));
         return $payload;
     }
 }
