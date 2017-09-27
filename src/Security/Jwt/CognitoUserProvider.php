@@ -59,11 +59,7 @@ class CognitoUserProvider implements JwtUserProvider
     {
 
         if (!empty($jwt->username)) {
-            return $this->loadByNodeRef(NodeRef::fromMessageRef(MessageRef::fromString($jwt->username)));
-        }
-
-        if (isset($jwt->email) && filter_var($jwt->email, FILTER_VALIDATE_EMAIL)) {
-            return $this->loadByEmail($jwt->email);
+            return $this->loadByNodeRef($jwt->username);
         }
 
         return $this->getAnonymousUser();
@@ -86,13 +82,13 @@ class CognitoUserProvider implements JwtUserProvider
     }
 
     /**
-     * @param NodeRef $nodeRef
+     * @param string $nodeRef
      *
      * @return User
      *
      * @throws UsernameNotFoundException
      */
-    protected function loadByNodeRef(NodeRef $nodeRef): User
+    protected function loadByNodeRef(string $nodeRef): User
     {
         $symfonyRequest = $this->requestStack->getCurrentRequest();
         $symfonyRequest->attributes->set('iam_bypass_permissions', true);
@@ -101,45 +97,7 @@ class CognitoUserProvider implements JwtUserProvider
 
         try {
             /** @var GetUserRequest $request */
-            $request = $getUserSchema->createMessage()->set('node_ref', $nodeRef);
-            $response = $this->pbjx->request($request);
-
-            $user = new User($response->get('node'));
-            if (!$user->isEnabled()) {
-                throw new DisabledException('Your account is disabled.');
-            }
-
-            return $user;
-        } catch (DisabledException $de) {
-            throw $de;
-        } catch (\Exception $e) {
-            throw new UsernameNotFoundException('You are not authorized to access this application.', $e->getCode(), $e);
-        } finally {
-            $symfonyRequest->attributes->remove('iam_bypass_permissions');
-        }
-    }
-
-    /**
-     * @param string $email
-     *
-     * @return User
-     *
-     * @throws UsernameNotFoundException
-     */
-    protected function loadByEmail(string $email): User
-    {
-        $symfonyRequest = $this->requestStack->getCurrentRequest();
-        $symfonyRequest->attributes->set('iam_bypass_permissions', true);
-
-        $getUserSchema = MessageResolver::findOneUsingMixin(GetUserRequestV1Mixin::create(), 'iam', 'request');
-        $userSchema = MessageResolver::findOneUsingMixin(UserV1Mixin::create(), 'iam', 'node');
-        $qname = $userSchema->getQName();
-
-        try {
-            /** @var GetUserRequest $request */
-            $request = $getUserSchema->createMessage()
-                ->set('qname', $qname->toString())
-                ->set('email', $email);
+            $request = $getUserSchema->createMessage()->set('node_ref', NodeRef::fromMessageRef(MessageRef::fromString($nodeRef)));
             $response = $this->pbjx->request($request);
 
             $user = new User($response->get('node'));
