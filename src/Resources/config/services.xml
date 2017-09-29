@@ -6,6 +6,7 @@
   <parameters>
     <parameter key="gdbots_iam.role_projector.class">Gdbots\Iam\RoleProjector</parameter>
     <parameter key="gdbots_iam.user_projector.class">Gdbots\Iam\UserProjector</parameter>
+    <parameter key="gdbots_iam.cognito_user_projector.class">Gdbots\Iam\CognitoUserProjector</parameter>
   </parameters>
 
   <services>
@@ -102,6 +103,11 @@
     <service id="gdbots_iam.user_projector" class="%gdbots_iam.user_projector.class%">
       <argument type="service" id="ncr"/>
       <argument type="service" id="ncr_search"/>
+      <tag name="pbjx.event_listener" event="%app_vendor%:iam:event:*" method="onEvent"/>
+      <tag name="pbjx.projector"/>
+    </service>
+
+    <service id="gdbots_iam.cognito_user_projector" class="%gdbots_iam.cognito_user_projector.class%">
       <tag name="pbjx.event_listener" event="%app_vendor%:iam:event:*" method="onEvent"/>
       <tag name="pbjx.projector"/>
     </service>
