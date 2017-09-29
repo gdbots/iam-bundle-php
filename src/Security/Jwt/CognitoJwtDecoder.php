@@ -22,6 +22,9 @@ class CognitoJwtDecoder
     /** @var string */
     protected $clientId;
 
+    /** @var string */
+    protected $poolId;
+
     /**
      * When checking nbf, iat or expiration times,
      * we want to provide some extra leeway time to
@@ -45,12 +48,14 @@ class CognitoJwtDecoder
     public function __construct(
         CacheHandler $cache,
         string $authorizedIssuer,
-        string $clientId
+        string $clientId,
+        string $poolId
     )
     {
         $this->authorizedIssuer = $authorizedIssuer;
         $this->cache = $cache;
         $this->clientId = $clientId;
+        $this->poolId = $poolId;
     }
 
     /**
@@ -112,7 +117,7 @@ class CognitoJwtDecoder
         $payload = json_decode($this->urlsafeB64Decode($encodedPayload));
 
         if (
-            $payload->iss !== $this->authorizedIssuer
+            $payload->iss !== $this->authorizedIssuer . '/' . $this->poolId
             || $payload->client_id !== $this->clientId
             || $payload->token_use !== "access"
         ) {
@@ -135,7 +140,7 @@ class CognitoJwtDecoder
             throw new AuthenticationException('Expired token');
         }
 
-        $jwkSet = $this->fetchJwkSet($this->authorizedIssuer . '/.well-known/jwks.json');
+        $jwkSet = $this->fetchJwkSet($this->authorizedIssuer . '/' . $this->poolId . '/.well-known/jwks.json');
 
         $loader = new Loader();
 
