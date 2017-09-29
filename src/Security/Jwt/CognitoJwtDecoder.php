@@ -13,16 +13,16 @@ use Symfony\Component\Security\Core\Exception\AuthenticationException;
 
 class CognitoJwtDecoder
 {
-    /** @var string */
+    /** @var string $authorizedIssuer */
     protected $authorizedIssuer;
 
-    /** @var CacheHandler */
+    /** @var CacheHandler $cache */
     protected $cache;
 
-    /** @var string */
+    /** @var string $clientId */
     protected $clientId;
 
-    /** @var string */
+    /** @var string $poolId */
     protected $poolId;
 
     /**
