@@ -15,7 +15,7 @@
   <services>
     <defaults public="false"/>
 
-    <service id="gdbots_iam.auth0_controller" class="%gdbots_iam.auth0_controller.class%">
+    <service id="gdbots_iam.auth0_controller" class="%gdbots_iam.auth0_controller.class%" public="true">
       <argument type="service" id="ncr"/>
       <call method="setContainer">
         <argument type="service" id="service_container"/>
