@@ -9,10 +9,12 @@
     <parameter key="env(AUTH0_API_IDENTIFIER)"/>
     <parameter key="env(AUTH0_AUTHORIZED_ISSUER)"/>
     <parameter key="env(AUTH0_SIGNING_SECRET)"/>
+    <parameter key="gdbots_iam.auth0_controller.class">Gdbots\Bundle\IamBundle\Controller\Auth0Controller</parameter>
   </parameters>
 
   <services>
-    <service id="gdbots_iam.auth0_controller" class="Gdbots\Bundle\IamBundle\Controller\Auth0Controller">
+    <service id="gdbots_iam.auth0_controller" class="%gdbots_iam.auth0_controller.class%">
+      <argument type="service" id="ncr"/>
       <call method="setContainer">
         <argument type="service" id="service_container"/>
       </call>

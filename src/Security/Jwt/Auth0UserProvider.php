@@ -6,7 +6,6 @@ namespace Gdbots\Bundle\IamBundle\Security\Jwt;
 use Gdbots\Bundle\IamBundle\Security\AnonymousUser;
 use Gdbots\Bundle\IamBundle\Security\User;
 use Gdbots\Pbj\MessageRef;
-use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbjx\Pbjx;
 use Gdbots\Schemas\Iam\Mixin\GetUserRequest\GetUserRequest;
 use Gdbots\Schemas\Iam\Mixin\GetUserRequest\GetUserRequestV1Mixin;
@@ -99,7 +98,7 @@ class Auth0UserProvider implements JwtUserProvider
         $symfonyRequest = $this->requestStack->getCurrentRequest();
         $symfonyRequest->attributes->set('iam_bypass_permissions', true);
 
-        $getUserSchema = MessageResolver::findOneUsingMixin(GetUserRequestV1Mixin::create(), 'iam', 'request');
+        $getUserSchema = GetUserRequestV1Mixin::findOne();
 
         try {
             /** @var GetUserRequest $request */
@@ -133,8 +132,8 @@ class Auth0UserProvider implements JwtUserProvider
         $symfonyRequest = $this->requestStack->getCurrentRequest();
         $symfonyRequest->attributes->set('iam_bypass_permissions', true);
 
-        $getUserSchema = MessageResolver::findOneUsingMixin(GetUserRequestV1Mixin::create(), 'iam', 'request');
-        $userSchema = MessageResolver::findOneUsingMixin(UserV1Mixin::create(), 'iam', 'node');
+        $getUserSchema = GetUserRequestV1Mixin::findOne();
+        $userSchema = UserV1Mixin::findOne();
         $qname = $userSchema->getQName();
 
         try {

@@ -98,7 +98,7 @@ class Auth0JwtAuthenticator implements SimplePreAuthenticatorInterface, Authenti
         return new JsonResponse($envelope->toArray(), HttpCode::HTTP_FORBIDDEN, [
             'Content-Type'       => 'application/json',
             'ETag'               => $envelope->get('etag'),
-            'x-pbjx-envelope-id' => $envelope->get('envelope_id'),
+            'x-pbjx-envelope-id' => (string)$envelope->get('envelope_id'),
         ]);
     }
 }

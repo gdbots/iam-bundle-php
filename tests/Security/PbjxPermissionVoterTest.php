@@ -79,6 +79,14 @@ class PbjxPermissionVoterTest extends TestCase
         );
     }
 
+    protected function tearDown()
+    {
+        $this->locator = null;
+        $this->pbjx = null;
+        $this->ncr = null;
+        $this->voter = null;
+    }
+
     /**
      * @dataProvider getDataSamples
      *
@@ -95,7 +103,10 @@ class PbjxPermissionVoterTest extends TestCase
         $this->assertEquals($expected, $this->voter->vote($token, null, $attributes), $message);
     }
 
-    public function getDataSamples()
+    /**
+     * @return array
+     */
+    public function getDataSamples(): array
     {
         return [
             [
@@ -144,13 +155,5 @@ class PbjxPermissionVoterTest extends TestCase
                 'expected'   => VoterInterface::ACCESS_ABSTAIN,
             ],
         ];
-    }
-
-    protected function tearDown()
-    {
-        $this->locator = null;
-        $this->pbjx = null;
-        $this->ncr = null;
-        $this->voter = null;
     }
 }
