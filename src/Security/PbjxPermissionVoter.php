@@ -29,7 +29,7 @@ final class PbjxPermissionVoter extends Voter
     private $checked = [];
 
     /**
-     * Array of policies, keys by user node ref.
+     * Array of policies, keyed by user node ref.
      *
      * @var Policy[]
      */
@@ -99,12 +99,11 @@ final class PbjxPermissionVoter extends Voter
         $symfonyRequest = $this->requestStack->getCurrentRequest();
         $symfonyRequest->attributes->set('iam_bypass_permissions', true);
 
-        /** @var GetRoleBatchRequest $request */
-        $request = GetRoleBatchRequestV1Mixin::findOne()
-            ->createMessage()
-            ->addToSet('node_refs', $node->get('roles'));
-
         try {
+            /** @var GetRoleBatchRequest $request */
+            $request = GetRoleBatchRequestV1Mixin::findOne()
+                ->createMessage()
+                ->addToSet('node_refs', $node->get('roles'));
             $response = $this->pbjx->request($request);
             $this->policies[$key] = new Policy($response->get('nodes', []));
         } catch (\Throwable $e) {

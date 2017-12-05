@@ -64,6 +64,10 @@ class Auth0Controller extends Controller
      */
     protected function getUsersRoles(UserNode $user): array
     {
-        return $this->ncr->getNodes($user->get('roles'));
+        try {
+            return $this->ncr->getNodes($user->get('roles'));
+        } catch (\Throwable $e) {
+            return [];
+        }
     }
 }

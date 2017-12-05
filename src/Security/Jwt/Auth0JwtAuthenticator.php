@@ -18,10 +18,10 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Http\Authentication\AuthenticationFailureHandlerInterface;
 use Symfony\Component\Security\Http\Authentication\SimplePreAuthenticatorInterface;
 
-class Auth0JwtAuthenticator implements SimplePreAuthenticatorInterface, AuthenticationFailureHandlerInterface
+final class Auth0JwtAuthenticator implements SimplePreAuthenticatorInterface, AuthenticationFailureHandlerInterface
 {
     /** @var Auth0JwtDecoder */
-    protected $decoder;
+    private $decoder;
 
     /**
      * @param Auth0JwtDecoder $decoder
@@ -42,7 +42,7 @@ class Auth0JwtAuthenticator implements SimplePreAuthenticatorInterface, Authenti
             return new PreAuthenticatedToken('anon.', null, $providerKey);
         }
 
-        $jwt = str_replace('Bearer ', '', $header);
+        $jwt = str_ireplace('bearer ', '', $header);
 
         try {
             $token = $this->decoder->decode($jwt);

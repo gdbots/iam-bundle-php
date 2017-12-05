@@ -17,13 +17,13 @@ use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
 use Symfony\Component\Security\Core\User\UserInterface;
 
-class Auth0UserProvider implements JwtUserProvider
+final class Auth0UserProvider implements JwtUserProvider
 {
     /** @var Pbjx */
-    protected $pbjx;
+    private $pbjx;
 
     /** @var RequestStack */
-    protected $requestStack;
+    private $requestStack;
 
     /**
      * @param Pbjx         $pbjx
@@ -93,16 +93,14 @@ class Auth0UserProvider implements JwtUserProvider
      *
      * @throws UsernameNotFoundException
      */
-    protected function loadByNodeRef(NodeRef $nodeRef): User
+    private function loadByNodeRef(NodeRef $nodeRef): User
     {
         $symfonyRequest = $this->requestStack->getCurrentRequest();
         $symfonyRequest->attributes->set('iam_bypass_permissions', true);
 
-        $getUserSchema = GetUserRequestV1Mixin::findOne();
-
         try {
             /** @var GetUserRequest $request */
-            $request = $getUserSchema->createMessage()->set('node_ref', $nodeRef);
+            $request = GetUserRequestV1Mixin::findOne()->createMessage()->set('node_ref', $nodeRef);
             $response = $this->pbjx->request($request);
 
             $user = new User($response->get('node'));
@@ -113,7 +111,7 @@ class Auth0UserProvider implements JwtUserProvider
             return $user;
         } catch (DisabledException $de) {
             throw $de;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             throw new UsernameNotFoundException('You are not authorized to access this application.', $e->getCode(), $e);
         } finally {
             $symfonyRequest->attributes->remove('iam_bypass_permissions');
@@ -127,19 +125,15 @@ class Auth0UserProvider implements JwtUserProvider
      *
      * @throws UsernameNotFoundException
      */
-    protected function loadByEmail(string $email): User
+    private function loadByEmail(string $email): User
     {
         $symfonyRequest = $this->requestStack->getCurrentRequest();
         $symfonyRequest->attributes->set('iam_bypass_permissions', true);
 
-        $getUserSchema = GetUserRequestV1Mixin::findOne();
-        $userSchema = UserV1Mixin::findOne();
-        $qname = $userSchema->getQName();
-
         try {
             /** @var GetUserRequest $request */
-            $request = $getUserSchema->createMessage()
-                ->set('qname', $qname->toString())
+            $request = GetUserRequestV1Mixin::findOne()->createMessage()
+                ->set('qname', UserV1Mixin::findOne()->getQName()->toString())
                 ->set('email', $email);
             $response = $this->pbjx->request($request);
 
@@ -151,7 +145,7 @@ class Auth0UserProvider implements JwtUserProvider
             return $user;
         } catch (DisabledException $de) {
             throw $de;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             throw new UsernameNotFoundException('You are not authorized to access this application.', $e->getCode(), $e);
         } finally {
             $symfonyRequest->attributes->remove('iam_bypass_permissions');

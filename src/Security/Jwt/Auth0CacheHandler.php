@@ -6,13 +6,13 @@ namespace Gdbots\Bundle\IamBundle\Security\Jwt;
 use Auth0\SDK\Helpers\Cache\CacheHandler;
 use Psr\Cache\CacheItemPoolInterface;
 
-class Auth0CacheHandler implements CacheHandler
+final class Auth0CacheHandler implements CacheHandler
 {
     /** @var CacheItemPoolInterface */
-    protected $cache;
+    private $cache;
 
     /** @var string */
-    protected $namespace;
+    private $namespace;
 
     /**
      * @param CacheItemPoolInterface $cache
@@ -55,7 +55,7 @@ class Auth0CacheHandler implements CacheHandler
      *
      * @return string
      */
-    protected function getCacheKey(string $key): string
+    private function getCacheKey(string $key): string
     {
         $key = md5($key);
         return "{$this->namespace}.{$key}";
