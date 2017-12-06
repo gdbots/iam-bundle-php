@@ -1,19 +1,19 @@
 {
   "name": "gdbots/iam-bundle",
   "homepage": "https://github.com/gdbots/iam-bundle-php",
-  "description": "Symfony3 bundle that integrates gdbots/iam library.",
-  "type": "library",
+  "description": "Symfony bundle that integrates gdbots/iam library.",
+  "type": "symfony-bundle",
   "license": "Apache-2.0",
   "require": {
     "php": ">=7.1",
-    "gdbots/iam": "dev-master as 0.1.0",
-    "gdbots/ncr-bundle": "~0.1"
+    "gdbots/iam": "~0.1",
+    "gdbots/ncr-bundle": "~0.2",
+    "symfony/security": "^4.0"
   },
   "require-dev": {
-    "composer/composer": "1.0.*@dev",
-    "phpunit/phpunit": "~6.0",
-    "auth0/auth0-php": "~5.0",
-    "gdbots/acme-schemas": "~1.0"
+    "phpunit/phpunit": "^6.4",
+    "auth0/auth0-php": "^5.0",
+    "gdbots/acme-schemas": "^1.1"
   },
   "autoload": {
     "psr-4": {

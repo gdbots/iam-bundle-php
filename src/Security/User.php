@@ -41,6 +41,7 @@ class User implements AdvancedUserInterface, EquatableInterface
 
         if ($this->node->get('is_staff')) {
             $this->roles[] = 'ROLE_USER';
+            $this->roles[] = 'ROLE_STAFF';
         }
     }
 

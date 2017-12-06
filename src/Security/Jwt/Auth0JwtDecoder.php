@@ -6,10 +6,10 @@ namespace Gdbots\Bundle\IamBundle\Security\Jwt;
 use Auth0\SDK\Helpers\Cache\CacheHandler;
 use Auth0\SDK\JWTVerifier;
 
-class Auth0JwtDecoder
+final class Auth0JwtDecoder
 {
     /** @var JWTVerifier */
-    protected $verifier;
+    private $verifier;
 
     /**
      * @param CacheHandler $cache
@@ -38,7 +38,7 @@ class Auth0JwtDecoder
      *
      * @return \stdClass
      *
-     * @throws \Exception
+     * @throws \Throwable
      */
     public function decode(string $jwt): \stdClass
     {
