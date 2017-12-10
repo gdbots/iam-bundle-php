@@ -5,6 +5,7 @@ namespace Gdbots\Bundle\IamBundle\Security;
 
 use Gdbots\Bundle\PbjxBundle\Validator\PermissionValidatorTrait;
 use Gdbots\Pbj\Message;
+use Gdbots\Pbjx\DependencyInjection\PbjxValidator;
 use Gdbots\Pbjx\Event\PbjxEvent;
 use Gdbots\Pbjx\EventSubscriber;
 use Gdbots\Schemas\Ncr\Request\GetNodeBatchRequest;
@@ -15,7 +16,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
-final class PbjxPermissionValidator implements EventSubscriber
+final class PbjxPermissionValidator implements EventSubscriber, PbjxValidator
 {
     use PermissionValidatorTrait;
 
