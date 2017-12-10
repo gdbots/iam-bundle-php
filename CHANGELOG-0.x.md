@@ -10,7 +10,7 @@ __BREAKING CHANGES__
   autoconfigure all services from `gdbots/iam` in your app configuration.
 * Move `PbjxPermissionValidator` to `Gdbots\Bundle\IamBundle\Validator` to match convention.
 * Move `auth0_jwt` service configurations to `src/Resources/config/`.
-* Remove `GdbotsIamExtension` since we're not autoload config any more. 
+* Remove `GdbotsIamExtension` since we're not autoloading config any more.
 
 
 ## v0.1.0
