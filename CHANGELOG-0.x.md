@@ -6,7 +6,8 @@ This changelog references the relevant changes done in 0.x versions.
 __BREAKING CHANGES__
 
 * Require `"gdbots/ncr-bundle": "~0.3"` and `"gdbots/iam": "~0.2"`.
-* Remove all `pbjx.handler` services and use Symfony prototype to import and autoconfigure them all.
+* Remove `src/Resources/config/services.xml`.  Use Symfony prototype to import and 
+  autoconfigure all services from `gdbots/iam` in your app configuration.
 
 
 ## v0.1.0

@@ -5,7 +5,7 @@ iam-bundle-php
 [![Code Climate](https://codeclimate.com/github/gdbots/iam-bundle-php/badges/gpa.svg)](https://codeclimate.com/github/gdbots/iam-bundle-php)
 [![Test Coverage](https://codeclimate.com/github/gdbots/iam-bundle-php/badges/coverage.svg)](https://codeclimate.com/github/gdbots/iam-bundle-php/coverage)
 
-Symfony bundle that integrates [gdbots/iam](https://github.com/gdbots/iam-php) library.
+Symfony bundle that provides security implementations for the [gdbots/iam](https://github.com/gdbots/iam-php) library.
 
 
 # Configuration
