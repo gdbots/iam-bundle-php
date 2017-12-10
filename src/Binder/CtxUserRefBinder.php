@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Gdbots\Bundle\IamBundle\Binder;
 
 use Gdbots\Bundle\IamBundle\Security\User;
+use Gdbots\Pbjx\DependencyInjection\PbjxBinder;
 use Gdbots\Pbjx\Event\PbjxEvent;
 use Gdbots\Pbjx\EventSubscriber;
 use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
@@ -11,7 +12,7 @@ use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
-final class CtxUserRefBinder implements EventSubscriber
+final class CtxUserRefBinder implements EventSubscriber, PbjxBinder
 {
     /** @var TokenStorageInterface */
     private $tokenStorage;
