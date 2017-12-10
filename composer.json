@@ -1,7 +1,7 @@
 {
   "name": "gdbots/iam-bundle",
   "homepage": "https://github.com/gdbots/iam-bundle-php",
-  "description": "Symfony bundle that integrates gdbots/iam library.",
+  "description": "Symfony bundle that provides security implementations for the gdbots/iam library.",
   "type": "symfony-bundle",
   "license": "Apache-2.0",
   "require": {
