@@ -22,41 +22,41 @@
       </call>
     </service>
 
-    <service id="gdbots_iam.security.auth0.jwt_authenticator" class="Gdbots\Bundle\IamBundle\Security\Jwt\Auth0JwtAuthenticator">
-      <argument type="service" id="gdbots_iam.security.auth0.jwt_decoder"/>
+    <service id="gdbots_iam.auth0_jwt_authenticator" class="Gdbots\Bundle\IamBundle\Security\Jwt\Auth0JwtAuthenticator">
+      <argument type="service" id="gdbots_iam.auth0_jwt_decoder"/>
     </service>
 
-    <service id="gdbots_iam.security.auth0.cache_handler" class="Gdbots\Bundle\IamBundle\Security\Jwt\Auth0CacheHandler">
+    <service id="gdbots_iam.auth0_cache_handler" class="Gdbots\Bundle\IamBundle\Security\Jwt\Auth0CacheHandler">
       <argument type="service" id="cache.app"/>
     </service>
 
-    <service id="gdbots_iam.security.auth0.jwt_decoder" class="Gdbots\Bundle\IamBundle\Security\Jwt\Auth0JwtDecoder">
-      <argument type="service" id="gdbots_iam.security.auth0.cache_handler"/>
+    <service id="gdbots_iam.auth0_jwt_decoder" class="Gdbots\Bundle\IamBundle\Security\Jwt\Auth0JwtDecoder">
+      <argument type="service" id="gdbots_iam.auth0_cache_handler"/>
       <argument>%env(AUTH0_API_IDENTIFIER)%</argument>
       <argument>%env(AUTH0_AUTHORIZED_ISSUER)%</argument>
       <argument>%env(AUTH0_SIGNING_SECRET)%</argument>
     </service>
 
-    <service id="gdbots_iam.security.auth0.user_provider" class="Gdbots\Bundle\IamBundle\Security\Jwt\Auth0UserProvider">
+    <service id="gdbots_iam.auth0_user_provider" class="Gdbots\Bundle\IamBundle\Security\Jwt\Auth0UserProvider">
       <argument type="service" id="pbjx"/>
       <argument type="service" id="request_stack"/>
     </service>
 
-    <service id="gdbots_iam.security.pbjx_permission_voter" class="Gdbots\Bundle\IamBundle\Security\PbjxPermissionVoter">
+    <service id="gdbots_iam.pbjx_permission_voter" class="Gdbots\Bundle\IamBundle\Security\PbjxPermissionVoter">
       <argument type="service" id="pbjx"/>
       <argument type="service" id="request_stack"/>
       <tag name="security.voter"/>
     </service>
 
     <!-- binders -->
-    <service id="gdbots_iam.security.ctx_user_ref_binder" class="Gdbots\Bundle\IamBundle\Binder\CtxUserRefBinder">
+    <service id="gdbots_iam.ctx_user_ref_binder" class="Gdbots\Bundle\IamBundle\Binder\CtxUserRefBinder">
       <argument type="service" id="security.token_storage"/>
       <tag name="pbjx.event_subscriber"/>
       <tag name="pbjx.binder"/>
     </service>
 
     <!-- validators -->
-    <service id="gdbots_iam.security.pbjx_permission_validator" class="Gdbots\Bundle\IamBundle\Security\PbjxPermissionValidator">
+    <service id="gdbots_iam.pbjx_permission_validator" class="Gdbots\Bundle\IamBundle\Validator\PbjxPermissionValidator">
       <argument type="service" id="request_stack"/>
       <argument type="service" id="security.authorization_checker"/>
       <tag name="pbjx.event_subscriber"/>

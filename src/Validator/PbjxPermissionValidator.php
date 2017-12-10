@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Gdbots\Bundle\IamBundle\Security;
+namespace Gdbots\Bundle\IamBundle\Validator;
 
 use Gdbots\Bundle\PbjxBundle\Validator\PermissionValidatorTrait;
 use Gdbots\Pbj\Message;
