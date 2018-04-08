@@ -43,7 +43,7 @@ class PbjxPermissionVoter extends Voter
      *
      * @var int
      */
-    protected $policyTtl = 120;
+    protected $policyTtl = 300;
 
     /**
      * @param Pbjx                   $pbjx
@@ -55,7 +55,7 @@ class PbjxPermissionVoter extends Voter
         Pbjx $pbjx,
         CacheItemPoolInterface $cache,
         RequestStack $requestStack,
-        int $policyTtl = 120
+        int $policyTtl = 300
     ) {
         $this->pbjx = $pbjx;
         $this->cache = $cache;

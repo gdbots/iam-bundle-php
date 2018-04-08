@@ -4,7 +4,7 @@ This changelog references the relevant changes done in 0.x versions.
 
 ## v0.2.1
 * Use `GetNodeBatchRequestHandler` since `GetRoleBatchRequestHandler` has been removed from gdbots/ncr v0.3.0.
-* Add policy caching to `PbjxPermissionVoter`.
+* Add policy caching to `PbjxPermissionVoter`, defaults to 300 seconds.
 * Use `GetNodeBatchRequestHandler` to get roles in `Auth0Controller` instead of going to Ncr direct.
 
 

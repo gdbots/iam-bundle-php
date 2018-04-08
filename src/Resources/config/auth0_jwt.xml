@@ -9,7 +9,7 @@
     <parameter key="env(AUTH0_API_IDENTIFIER)"/>
     <parameter key="env(AUTH0_AUTHORIZED_ISSUER)"/>
     <parameter key="env(AUTH0_SIGNING_SECRET)"/>
-    <parameter key="env(IAM_POLICY_TTL)">120</parameter>
+    <parameter key="env(IAM_POLICY_TTL)">300</parameter>
     <parameter key="gdbots_iam.auth0_controller.class">Gdbots\Bundle\IamBundle\Controller\Auth0Controller</parameter>
     <parameter key="gdbots_iam.pbjx_permission_voter.class">Gdbots\Bundle\IamBundle\Security\PbjxPermissionVoter</parameter>
 
