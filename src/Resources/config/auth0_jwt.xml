@@ -9,7 +9,10 @@
     <parameter key="env(AUTH0_API_IDENTIFIER)"/>
     <parameter key="env(AUTH0_AUTHORIZED_ISSUER)"/>
     <parameter key="env(AUTH0_SIGNING_SECRET)"/>
+    <parameter key="env(IAM_POLICY_TTL)">120</parameter>
     <parameter key="gdbots_iam.auth0_controller.class">Gdbots\Bundle\IamBundle\Controller\Auth0Controller</parameter>
+    <parameter key="gdbots_iam.pbjx_permission_voter.class">Gdbots\Bundle\IamBundle\Security\PbjxPermissionVoter</parameter>
+
   </parameters>
 
   <services>
@@ -42,9 +45,11 @@
       <argument type="service" id="request_stack"/>
     </service>
 
-    <service id="gdbots_iam.pbjx_permission_voter" class="Gdbots\Bundle\IamBundle\Security\PbjxPermissionVoter">
+    <service id="gdbots_iam.pbjx_permission_voter" class="%gdbots_iam.pbjx_permission_voter.class%">
       <argument type="service" id="pbjx"/>
+      <argument type="service" id="cache.app"/>
       <argument type="service" id="request_stack"/>
+      <argument>%env(int:IAM_POLICY_TTL)%</argument>
       <tag name="security.voter"/>
     </service>
 
