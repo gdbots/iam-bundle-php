@@ -4,32 +4,37 @@ declare(strict_types=1);
 namespace Gdbots\Bundle\IamBundle\Controller;
 
 use Gdbots\Bundle\IamBundle\Security\User;
-use Gdbots\Ncr\Ncr;
+use Gdbots\Pbjx\Pbjx;
 use Gdbots\Schemas\Iam\Mixin\Role\Role;
 use Gdbots\Schemas\Iam\Mixin\User\User as UserNode;
+use Gdbots\Schemas\Ncr\Mixin\GetNodeBatchRequest\GetNodeBatchRequest;
+use Gdbots\Schemas\Ncr\Request\GetNodeBatchRequestV1;
 use Gdbots\Schemas\Pbjx\Enum\Code;
 use Gdbots\Schemas\Pbjx\Enum\HttpCode;
 use Gdbots\Schemas\Pbjx\Envelope;
 use Gdbots\Schemas\Pbjx\EnvelopeV1;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
 
 class Auth0Controller extends Controller
 {
-    /** @var Ncr */
-    protected $ncr;
+    /** @var Pbjx */
+    protected $pbjx;
 
     /**
-     * @param Ncr $ncr
+     * @param Pbjx $pbjx
      */
-    public function __construct(Ncr $ncr)
+    public function __construct(Pbjx $pbjx)
     {
-        $this->ncr = $ncr;
+        $this->pbjx = $pbjx;
     }
 
     /**
+     * @param Request $request
+     *
      * @return Envelope
      */
-    public function meAction(): Envelope
+    public function meAction(Request $request): Envelope
     {
         $user = $this->getUser();
         $envelope = EnvelopeV1::create();
@@ -41,33 +46,48 @@ class Auth0Controller extends Controller
                 ->set('error_name', 'AccessDenied');
         }
 
-        $userNode = $user->getUserNode();
+        $node = $user->getUserNode();
         if ($user->isEnabled()
-            && $userNode->get('is_staff')
-            && $userNode->has('roles')
+            && $node->get('is_staff')
+            && $node->has('roles')
         ) {
-            foreach ($this->getUsersRoles($userNode) as $nodeRef => $role) {
+            foreach ($this->getUsersRoles($request, $node) as $nodeRef => $role) {
                 $envelope->addToMap('derefs', $nodeRef, $role);
             }
         }
 
         return $envelope
-            ->set('etag', $userNode->get('etag'))
-            ->set('message_ref', $userNode->generateMessageRef())
-            ->set('message', $userNode);
+            ->set('etag', $node->get('etag'))
+            ->set('message_ref', $node->generateMessageRef())
+            ->set('message', $node);
     }
 
     /**
-     * @param UserNode $user
+     * @param Request  $symfonyRequest
+     * @param UserNode $node
      *
      * @return Role[]
      */
-    protected function getUsersRoles(UserNode $user): array
+    protected function getUsersRoles(Request $symfonyRequest, UserNode $node): array
     {
         try {
-            return $this->ncr->getNodes($user->get('roles'));
+            $request = $this->createGetRoleBatchRequest($symfonyRequest, $node)
+                ->addToSet('node_refs', $node->get('roles', []));
+            return $this->pbjx->request($request)->get('nodes', []);
         } catch (\Throwable $e) {
             return [];
         }
+    }
+
+    /**
+     * @param Request  $symfonyRequest
+     * @param UserNode $node
+     *
+     * @return GetNodeBatchRequest
+     */
+    protected function createGetRoleBatchRequest(Request $symfonyRequest, UserNode $node): GetNodeBatchRequest
+    {
+        // override if you need to customize the request (e.g. multi-tenant apps)
+        return GetNodeBatchRequestV1::create();
     }
 }

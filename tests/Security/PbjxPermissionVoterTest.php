@@ -5,16 +5,18 @@ namespace Gdbots\Tests\Bundle\IamBundle\Security;
 
 use Acme\Schemas\Iam\Node\RoleV1;
 use Acme\Schemas\Iam\Node\UserV1;
-use Acme\Schemas\Iam\Request\GetRoleBatchRequestV1;
 use Gdbots\Bundle\IamBundle\Security\PbjxPermissionVoter;
 use Gdbots\Bundle\IamBundle\Security\User;
-use Gdbots\Iam\GetRoleBatchRequestHandler;
+use Gdbots\Ncr\GetNodeBatchRequestHandler;
 use Gdbots\Ncr\Repository\InMemoryNcr;
 use Gdbots\Pbjx\Pbjx;
 use Gdbots\Pbjx\RegisteringServiceLocator;
 use Gdbots\Schemas\Iam\RoleId;
 use Gdbots\Schemas\Ncr\NodeRef;
+use Gdbots\Schemas\Ncr\Request\GetNodeBatchRequestV1;
 use PHPUnit\Framework\TestCase;
+use Psr\Cache\CacheItemPoolInterface;
+use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Authentication\Token\AbstractToken;
@@ -53,11 +55,12 @@ class PbjxPermissionVoterTest extends TestCase
         $this->locator = new RegisteringServiceLocator();
         $this->pbjx = $this->locator->getPbjx();
         $this->ncr = new InMemoryNcr();
-        $handler = new GetRoleBatchRequestHandler($this->ncr);
-        $this->locator->registerRequestHandler(GetRoleBatchRequestV1::schema()->getCurie(), $handler);
+
+        $handler = new GetNodeBatchRequestHandler($this->ncr);
+        $this->locator->registerRequestHandler(GetNodeBatchRequestV1::schema()->getCurie(), $handler);
         $requestStack = new RequestStack();
         $requestStack->push(new Request());
-        $this->voter = new PbjxPermissionVoter($this->pbjx, $requestStack);
+        $this->voter = new PbjxPermissionVoter($this->pbjx, new ArrayAdapter(), $requestStack);
 
         $this->ncr->putNode(
             RoleV1::create()

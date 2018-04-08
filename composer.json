@@ -6,7 +6,7 @@
   "license": "Apache-2.0",
   "require": {
     "php": ">=7.1",
-    "gdbots/iam": "~0.2",
+    "gdbots/iam": "~0.3",
     "gdbots/ncr-bundle": "~0.3",
     "symfony/security": "^4.0"
   },
@@ -27,10 +27,5 @@
   },
   "scripts": {
     "test": "vendor/bin/phpunit"
-  },
-  "extra": {
-    "branch-alias": {
-      "dev-master": "0.2.x-dev"
-    }
   }
 }
