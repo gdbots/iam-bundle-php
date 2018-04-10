@@ -43,6 +43,7 @@
     <service id="gdbots_iam.auth0_user_provider" class="Gdbots\Bundle\IamBundle\Security\Jwt\Auth0UserProvider">
       <argument type="service" id="pbjx"/>
       <argument type="service" id="request_stack"/>
+      <argument>%env(AUTH0_API_IDENTIFIER)%</argument>
     </service>
 
     <service id="gdbots_iam.pbjx_permission_voter" class="%gdbots_iam.pbjx_permission_voter.class%">

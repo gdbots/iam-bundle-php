@@ -25,14 +25,19 @@ final class Auth0UserProvider implements JwtUserProvider
     /** @var RequestStack */
     private $requestStack;
 
+    /** @var string */
+    private $apiIdentifier;
+
     /**
      * @param Pbjx         $pbjx
      * @param RequestStack $requestStack
+     * @param string       $apiIdentifier
      */
-    public function __construct(Pbjx $pbjx, RequestStack $requestStack)
+    public function __construct(Pbjx $pbjx, RequestStack $requestStack, string $apiIdentifier)
     {
         $this->pbjx = $pbjx;
         $this->requestStack = $requestStack;
+        $this->apiIdentifier = $apiIdentifier;
     }
 
     /**
@@ -56,7 +61,7 @@ final class Auth0UserProvider implements JwtUserProvider
      */
     public function loadUserByJwt(\stdClass $jwt): UserInterface
     {
-        $userRefProperty = ($jwt->aud ?: '') . 'ctx_user_ref';
+        $userRefProperty = "{$this->apiIdentifier}ctx_user_ref";
         $ctxUserRef = $jwt->$userRefProperty ?? null;
 
         if (!empty($ctxUserRef)) {

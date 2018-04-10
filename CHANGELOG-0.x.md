@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 0.x versions.
 
 
+## v0.2.2
+* Fix bug in `Auth0UserProvider` where Auth0 may return an array in `$jwt->aud`.  Instead of using the aud property we add `<argument>%env(AUTH0_API_IDENTIFIER)%</argument>` to the service and directly reference the expected property on the JWT.
+
+
 ## v0.2.1
 * Use `GetNodeBatchRequestHandler` since `GetRoleBatchRequestHandler` has been removed from gdbots/ncr v0.3.0.
 * Add policy caching to `PbjxPermissionVoter`, defaults to 300 seconds.
