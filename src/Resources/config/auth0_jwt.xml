@@ -19,7 +19,7 @@
     <defaults public="false"/>
 
     <service id="gdbots_iam.auth0_controller" class="%gdbots_iam.auth0_controller.class%" public="true">
-      <argument type="service" id="ncr"/>
+      <argument type="service" id="pbjx"/>
       <call method="setContainer">
         <argument type="service" id="service_container"/>
       </call>
