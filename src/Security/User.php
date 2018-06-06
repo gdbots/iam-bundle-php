@@ -4,16 +4,17 @@ declare(strict_types=1);
 namespace Gdbots\Bundle\IamBundle\Security;
 
 use Gdbots\Pbj\MessageRef;
+use Gdbots\Schemas\Iam\Mixin\App\App;
 use Gdbots\Schemas\Iam\Mixin\User\User as UserNode;
 use Gdbots\Schemas\Ncr\Enum\NodeStatus;
+use Gdbots\Schemas\Ncr\Mixin\Node\Node;
 use Gdbots\Schemas\Ncr\NodeRef;
-use Symfony\Component\Security\Core\User\AdvancedUserInterface;
 use Symfony\Component\Security\Core\User\EquatableInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
-class User implements AdvancedUserInterface, EquatableInterface
+class User implements EquatableInterface
 {
-    /** @var UserNode */
+    /** @var Node|App|UserNode */
     protected $node;
 
     /** @var NodeRef */
@@ -26,9 +27,9 @@ class User implements AdvancedUserInterface, EquatableInterface
     protected $roles = [];
 
     /**
-     * @param UserNode $node
+     * @param Node $node
      */
-    public function __construct(UserNode $node)
+    public function __construct(Node $node)
     {
         $this->node = $node;
         $this->nodeRef = NodeRef::fromNode($node);
@@ -39,16 +40,16 @@ class User implements AdvancedUserInterface, EquatableInterface
             $this->roles[] = 'ROLE_' . strtoupper(str_replace('-', '_', $role->getId()));
         }
 
-        if ($this->node->get('is_staff')) {
+        if ($this->node instanceof UserNode && $this->node->get('is_staff')) {
             $this->roles[] = 'ROLE_USER';
             $this->roles[] = 'ROLE_STAFF';
         }
     }
 
     /**
-     * @return UserNode
+     * @return Node
      */
-    public function getUserNode(): UserNode
+    public function getUserNode(): Node
     {
         return $this->node;
     }
@@ -131,33 +132,17 @@ class User implements AdvancedUserInterface, EquatableInterface
     /**
      * {@inheritdoc}
      */
-    public function isAccountNonExpired()
-    {
-        return NodeStatus::PUBLISHED()->equals($this->node->get('status'));
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function isAccountNonLocked()
-    {
-        return !$this->node->get('is_blocked');
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function isCredentialsNonExpired()
-    {
-        return true;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function isEnabled()
     {
-        return NodeStatus::PUBLISHED()->equals($this->node->get('status'))
-            && !$this->node->get('is_blocked');
+        if (!NodeStatus::PUBLISHED()->equals($this->node->get('status'))) {
+            return false;
+        }
+
+        if ($this->node instanceof UserNode) {
+            return !$this->node->get('is_blocked');
+        }
+
+        // apps are always enabled when published (for now)
+        return true;
     }
 }

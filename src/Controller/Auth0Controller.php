@@ -6,8 +6,8 @@ namespace Gdbots\Bundle\IamBundle\Controller;
 use Gdbots\Bundle\IamBundle\Security\User;
 use Gdbots\Pbjx\Pbjx;
 use Gdbots\Schemas\Iam\Mixin\Role\Role;
-use Gdbots\Schemas\Iam\Mixin\User\User as UserNode;
 use Gdbots\Schemas\Ncr\Mixin\GetNodeBatchRequest\GetNodeBatchRequest;
+use Gdbots\Schemas\Ncr\Mixin\Node\Node;
 use Gdbots\Schemas\Ncr\Request\GetNodeBatchRequestV1;
 use Gdbots\Schemas\Pbjx\Enum\Code;
 use Gdbots\Schemas\Pbjx\Enum\HttpCode;
@@ -47,10 +47,7 @@ class Auth0Controller extends Controller
         }
 
         $node = $user->getUserNode();
-        if ($user->isEnabled()
-            && $node->get('is_staff')
-            && $node->has('roles')
-        ) {
+        if ($user->isEnabled() && $node->has('roles')) {
             foreach ($this->getUsersRoles($request, $node) as $nodeRef => $role) {
                 $envelope->addToMap('derefs', $nodeRef, $role);
             }
@@ -63,12 +60,12 @@ class Auth0Controller extends Controller
     }
 
     /**
-     * @param Request  $symfonyRequest
-     * @param UserNode $node
+     * @param Request $symfonyRequest
+     * @param Node    $node
      *
      * @return Role[]
      */
-    protected function getUsersRoles(Request $symfonyRequest, UserNode $node): array
+    protected function getUsersRoles(Request $symfonyRequest, Node $node): array
     {
         try {
             $request = $this->createGetRoleBatchRequest($symfonyRequest, $node)
@@ -80,12 +77,12 @@ class Auth0Controller extends Controller
     }
 
     /**
-     * @param Request  $symfonyRequest
-     * @param UserNode $node
+     * @param Request $symfonyRequest
+     * @param Node    $node
      *
      * @return GetNodeBatchRequest
      */
-    protected function createGetRoleBatchRequest(Request $symfonyRequest, UserNode $node): GetNodeBatchRequest
+    protected function createGetRoleBatchRequest(Request $symfonyRequest, Node $node): GetNodeBatchRequest
     {
         // override if you need to customize the request (e.g. multi-tenant apps)
         return GetNodeBatchRequestV1::create();

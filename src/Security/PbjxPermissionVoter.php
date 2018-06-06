@@ -7,8 +7,8 @@ use Gdbots\Iam\Policy;
 use Gdbots\Pbj\SchemaCurie;
 use Gdbots\Pbjx\Pbjx;
 use Gdbots\Schemas\Iam\Mixin\Role\Role;
-use Gdbots\Schemas\Iam\Mixin\User\User as UserNode;
 use Gdbots\Schemas\Ncr\Mixin\GetNodeBatchRequest\GetNodeBatchRequest;
+use Gdbots\Schemas\Ncr\Mixin\Node\Node;
 use Gdbots\Schemas\Ncr\Request\GetNodeBatchRequestV1;
 use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -139,12 +139,12 @@ class PbjxPermissionVoter extends Voter
      * The ".php" suffix here is used because the cache item
      * will be stored as serialized php.
      *
-     * @param Request  $symfonyRequest
-     * @param UserNode $node
+     * @param Request $symfonyRequest
+     * @param Node    $node
      *
      * @return string
      */
-    protected function getPolicyCacheKey(Request $symfonyRequest, UserNode $node): string
+    protected function getPolicyCacheKey(Request $symfonyRequest, Node $node): string
     {
         // because the policy is really based on the roles we'll cache
         // it based on that, not the user.
@@ -155,12 +155,12 @@ class PbjxPermissionVoter extends Voter
     }
 
     /**
-     * @param Request  $symfonyRequest
-     * @param UserNode $node
+     * @param Request $symfonyRequest
+     * @param Node    $node
      *
      * @return Role[]
      */
-    protected function getUsersRoles(Request $symfonyRequest, UserNode $node): array
+    protected function getUsersRoles(Request $symfonyRequest, Node $node): array
     {
         try {
             $request = $this->createGetRoleBatchRequest($symfonyRequest, $node)
@@ -172,12 +172,12 @@ class PbjxPermissionVoter extends Voter
     }
 
     /**
-     * @param Request  $symfonyRequest
-     * @param UserNode $node
+     * @param Request $symfonyRequest
+     * @param Node    $node
      *
      * @return GetNodeBatchRequest
      */
-    protected function createGetRoleBatchRequest(Request $symfonyRequest, UserNode $node): GetNodeBatchRequest
+    protected function createGetRoleBatchRequest(Request $symfonyRequest, Node $node): GetNodeBatchRequest
     {
         // override if you need to customize the request (e.g. multi-tenant apps)
         return GetNodeBatchRequestV1::create();
