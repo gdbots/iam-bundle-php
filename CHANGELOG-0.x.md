@@ -6,6 +6,7 @@ This changelog references the relevant changes done in 0.x versions.
 __BREAKING CHANGES__
 
 * Remove use of Symfony's `AdvancedUserInterface` as it is now deprecated.
+* Update `Auth0UserProvider` so it can load an `gdbots:iam:mixin:user` or an `gdbots:iam:mixin:app` node.
 * Require `"symfony/security": "^4.1"`.
 
 

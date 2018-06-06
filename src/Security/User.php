@@ -12,7 +12,7 @@ use Gdbots\Schemas\Ncr\NodeRef;
 use Symfony\Component\Security\Core\User\EquatableInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
-class User implements EquatableInterface
+class User implements UserInterface, EquatableInterface
 {
     /** @var Node|App|UserNode */
     protected $node;
@@ -21,7 +21,7 @@ class User implements EquatableInterface
     protected $nodeRef;
 
     /** @var MessageRef */
-    protected $userRef;
+    protected $messageRef;
 
     /** @var string[] */
     protected $roles = [];
@@ -33,7 +33,7 @@ class User implements EquatableInterface
     {
         $this->node = $node;
         $this->nodeRef = NodeRef::fromNode($node);
-        $this->userRef = $node->generateMessageRef();
+        $this->messageRef = $node->generateMessageRef();
 
         /** @var NodeRef $role */
         foreach ($this->node->get('roles', []) as $role) {
@@ -44,12 +44,17 @@ class User implements EquatableInterface
             $this->roles[] = 'ROLE_USER';
             $this->roles[] = 'ROLE_STAFF';
         }
+
+        if ($this->node instanceof App) {
+            $this->roles[] = 'ROLE_APP';
+            $this->roles[] = 'ROLE_' . strtoupper(str_replace('-', '_', $this->nodeRef->getLabel()));
+        }
     }
 
     /**
      * @return Node
      */
-    public function getUserNode(): Node
+    public function getNode(): Node
     {
         return $this->node;
     }
@@ -57,7 +62,7 @@ class User implements EquatableInterface
     /**
      * @return NodeRef
      */
-    public function getUserNodeRef(): NodeRef
+    public function getNodeRef(): NodeRef
     {
         return $this->nodeRef;
     }
@@ -65,9 +70,9 @@ class User implements EquatableInterface
     /**
      * @return MessageRef
      */
-    public function getUserRef(): MessageRef
+    public function getMessageRef(): MessageRef
     {
-        return $this->userRef;
+        return $this->messageRef;
     }
 
     /**

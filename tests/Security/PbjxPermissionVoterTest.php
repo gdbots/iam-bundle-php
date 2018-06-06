@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Gdbots\Tests\Bundle\IamBundle\Security;
 
+use Acme\Schemas\Iam\Node\IosAppV1;
 use Acme\Schemas\Iam\Node\RoleV1;
 use Acme\Schemas\Iam\Node\UserV1;
 use Gdbots\Bundle\IamBundle\Security\PbjxPermissionVoter;
@@ -15,7 +16,6 @@ use Gdbots\Schemas\Iam\RoleId;
 use Gdbots\Schemas\Ncr\NodeRef;
 use Gdbots\Schemas\Ncr\Request\GetNodeBatchRequestV1;
 use PHPUnit\Framework\TestCase;
-use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -98,9 +98,27 @@ class PbjxPermissionVoterTest extends TestCase
      * @param string $message
      * @param int    $expected
      */
-    public function testVote(array $roles = [], array $attributes = [], string $message, int $expected)
+    public function testVoteForUser(array $roles = [], array $attributes = [], string $message, int $expected)
     {
         $user = new User(UserV1::create()->addToSet('roles', $roles));
+        $token = new ConcreteToken($user, $user->getRoles());
+
+        $this->assertEquals($expected, $this->voter->vote($token, null, $attributes), $message);
+    }
+
+    /**
+     * @dataProvider getDataSamples
+     *
+     * @param array  $roles
+     * @param array  $attributes
+     * @param string $message
+     * @param int    $expected
+     */
+    public function testVoteForApp(array $roles = [], array $attributes = [], string $message, int $expected)
+    {
+        $user = new User(IosAppV1::create()->addToSet('roles', $roles));
+
+        echo $user->getNode();
         $token = new ConcreteToken($user, $user->getRoles());
 
         $this->assertEquals($expected, $this->voter->vote($token, null, $attributes), $message);

@@ -46,7 +46,7 @@ class Auth0Controller extends Controller
                 ->set('error_name', 'AccessDenied');
         }
 
-        $node = $user->getUserNode();
+        $node = $user->getNode();
         if ($user->isEnabled() && $node->has('roles')) {
             foreach ($this->getUsersRoles($request, $node) as $nodeRef => $role) {
                 $envelope->addToMap('derefs', $nodeRef, $role);

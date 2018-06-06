@@ -103,7 +103,7 @@ class PbjxPermissionVoter extends Voter
             return $this->policy;
         }
 
-        $node = $user->getUserNode();
+        $node = $user->getNode();
         if (!$node->has('roles')) {
             // make an empty policy with no permissions
             return $this->policy = new Policy();

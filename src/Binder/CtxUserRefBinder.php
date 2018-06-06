@@ -48,7 +48,7 @@ final class CtxUserRefBinder implements EventSubscriber, PbjxBinder
             return;
         }
 
-        $message->set('ctx_user_ref', $user->getUserRef());
+        $message->set('ctx_user_ref', $user->getMessageRef());
     }
 
     /**
