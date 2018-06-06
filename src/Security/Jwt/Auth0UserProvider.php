@@ -6,11 +6,14 @@ namespace Gdbots\Bundle\IamBundle\Security\Jwt;
 use Gdbots\Bundle\IamBundle\Security\AnonymousUser;
 use Gdbots\Bundle\IamBundle\Security\User;
 use Gdbots\Pbj\MessageRef;
+use Gdbots\Pbj\MessageResolver;
+use Gdbots\Pbj\SchemaCurie;
 use Gdbots\Pbjx\Pbjx;
 use Gdbots\Schemas\Iam\Mixin\GetUserRequest\GetUserRequest;
 use Gdbots\Schemas\Iam\Mixin\GetUserRequest\GetUserRequestV1Mixin;
 use Gdbots\Schemas\Iam\Mixin\User\UserV1Mixin;
 use Gdbots\Schemas\Ncr\NodeRef;
+use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Exception\DisabledException;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
@@ -102,15 +105,26 @@ final class Auth0UserProvider implements JwtUserProvider
     {
         $symfonyRequest = $this->requestStack->getCurrentRequest();
         $symfonyRequest->attributes->set('iam_bypass_permissions', true);
+        $userCurie = UserV1Mixin::findOne()->getCurie();
 
         try {
-            /** @var GetUserRequest $request */
-            $request = GetUserRequestV1Mixin::findOne()->createMessage()->set('node_ref', $nodeRef);
+            /** @var Request $request */
+            if ($nodeRef->getQName()->toString() === $userCurie->getQName()->toString()) {
+                $request = GetUserRequestV1Mixin::findOne()->createMessage();
+            } else {
+                /** @var Request $class */
+                $class = MessageResolver::resolveCurie(SchemaCurie::fromString(
+                    "{$userCurie->getVendor()}:{$userCurie->getPackage()}:request:get-app-request"
+                ));
+                $request = $class::create();
+            }
+
+            $request->set('node_ref', $nodeRef);
             $response = $this->pbjx->request($request);
 
             $user = new User($response->get('node'));
             if (!$user->isEnabled()) {
-                throw new DisabledException('Your account is disabled.');
+                throw new DisabledException("Your {$nodeRef->getLabel()} account is disabled.");
             }
 
             return $user;

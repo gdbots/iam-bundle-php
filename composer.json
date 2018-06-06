@@ -8,7 +8,7 @@
     "php": ">=7.1",
     "gdbots/iam": "~0.3",
     "gdbots/ncr-bundle": "~0.3",
-    "symfony/security": "^4.0"
+    "symfony/security": "^4.1"
   },
   "require-dev": {
     "phpunit/phpunit": "^6.4",
