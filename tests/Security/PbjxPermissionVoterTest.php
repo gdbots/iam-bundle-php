@@ -117,10 +117,7 @@ class PbjxPermissionVoterTest extends TestCase
     public function testVoteForApp(array $roles = [], array $attributes = [], string $message, int $expected)
     {
         $user = new User(IosAppV1::create()->addToSet('roles', $roles));
-
-        echo $user->getNode();
         $token = new ConcreteToken($user, $user->getRoles());
-
         $this->assertEquals($expected, $this->voter->vote($token, null, $attributes), $message);
     }
 

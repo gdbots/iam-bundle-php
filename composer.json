@@ -6,8 +6,8 @@
   "license": "Apache-2.0",
   "require": {
     "php": ">=7.1",
-    "gdbots/iam": "~0.3",
-    "gdbots/ncr-bundle": "~0.3",
+    "gdbots/iam": "^1.0",
+    "gdbots/ncr-bundle": "^1.0",
     "symfony/security": "^4.1"
   },
   "require-dev": {
