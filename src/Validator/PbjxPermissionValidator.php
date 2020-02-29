@@ -42,7 +42,9 @@ final class PbjxPermissionValidator implements EventSubscriber, PbjxValidator
      */
     protected function checkPermission(PbjxEvent $pbjxEvent, Message $message, Request $request): void
     {
-        if ('app_healthcheck_show' === $request->attributes->get('_route') || $message instanceof EchoRequest) {
+        if (false !== strpos($request->attributes->get('_route'), 'app_healthcheck_')
+            || $message instanceof EchoRequest
+        ) {
             return;
         }
 
