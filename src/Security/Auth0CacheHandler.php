@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Gdbots\Bundle\IamBundle\Security\Jwt;
+namespace Gdbots\Bundle\IamBundle\Security;
 
 use Auth0\SDK\Helpers\Cache\CacheHandler;
 use Psr\Cache\CacheItemPoolInterface;

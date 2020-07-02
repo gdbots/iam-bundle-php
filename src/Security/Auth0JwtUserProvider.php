@@ -1,35 +1,23 @@
 <?php
 declare(strict_types=1);
 
-namespace Gdbots\Bundle\IamBundle\Security\Jwt;
+namespace Gdbots\Bundle\IamBundle\Security;
 
-use Gdbots\Bundle\IamBundle\Security\AnonymousUser;
-use Gdbots\Bundle\IamBundle\Security\User;
-use Gdbots\Pbj\MessageRef;
 use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbj\SchemaCurie;
 use Gdbots\Pbjx\Pbjx;
-use Gdbots\Schemas\Iam\Mixin\GetUserRequest\GetUserRequest;
-use Gdbots\Schemas\Iam\Mixin\GetUserRequest\GetUserRequestV1Mixin;
 use Gdbots\Schemas\Iam\Mixin\User\UserV1Mixin;
-use Gdbots\Schemas\Ncr\NodeRef;
-use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Exception\DisabledException;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
 use Symfony\Component\Security\Core\User\UserInterface;
 
-final class Auth0UserProvider implements JwtUserProvider
+final class Auth0JwtUserProvider implements JwtUserProvider
 {
-    /** @var Pbjx */
-    private $pbjx;
-
-    /** @var RequestStack */
-    private $requestStack;
-
-    /** @var string */
-    private $apiIdentifier;
+    private Pbjx $pbjx;
+    private RequestStack $requestStack;
+    private string $apiIdentifier;
 
     /**
      * @param Pbjx         $pbjx

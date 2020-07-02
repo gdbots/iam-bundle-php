@@ -1,41 +1,39 @@
 <?php
 declare(strict_types=1);
 
-namespace Gdbots\Bundle\IamBundle\Binder;
+namespace Gdbots\Bundle\IamBundle;
 
 use Gdbots\Bundle\IamBundle\Security\User;
 use Gdbots\Pbjx\DependencyInjection\PbjxBinder;
 use Gdbots\Pbjx\Event\PbjxEvent;
 use Gdbots\Pbjx\EventSubscriber;
-use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
-use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
-use Gdbots\Schemas\Pbjx\Mixin\Request\Request;
+use Gdbots\Schemas\Pbjx\Mixin\Command\CommandV1Mixin;
+use Gdbots\Schemas\Pbjx\Mixin\Event\EventV1Mixin;
+use Gdbots\Schemas\Pbjx\Mixin\Request\RequestV1Mixin;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 final class CtxUserRefBinder implements EventSubscriber, PbjxBinder
 {
-    /** @var TokenStorageInterface */
-    private $tokenStorage;
+    private TokenStorageInterface $tokenStorage;
 
-    /**
-     * @param TokenStorageInterface $tokenStorage
-     */
+    public static function getSubscribedEvents()
+    {
+        return [
+            CommandV1Mixin::SCHEMA_CURIE . '.bind' => ['bind', 20000],
+            EventV1Mixin::SCHEMA_CURIE . '.bind'   => ['bind', 20000],
+            RequestV1Mixin::SCHEMA_CURIE . '.bind' => ['bind', 20000],
+        ];
+    }
+
     public function __construct(TokenStorageInterface $tokenStorage)
     {
         $this->tokenStorage = $tokenStorage;
     }
 
-    /**
-     * @param PbjxEvent $pbjxEvent
-     */
     public function bind(PbjxEvent $pbjxEvent): void
     {
         $message = $pbjxEvent->getMessage();
-        if (!$message instanceof Command && !$message instanceof Event && !$message instanceof Request) {
-            return;
-        }
-
-        if ($message->has('ctx_user_ref')) {
+        if ($message->has(CommandV1Mixin::CTX_USER_REF_FIELD)) {
             return;
         }
 
@@ -48,16 +46,6 @@ final class CtxUserRefBinder implements EventSubscriber, PbjxBinder
             return;
         }
 
-        $message->set('ctx_user_ref', $user->getMessageRef());
-    }
-
-    /**
-     * @return array
-     */
-    public static function getSubscribedEvents()
-    {
-        return [
-            'gdbots_pbjx.message.bind' => 'bind',
-        ];
+        $message->set(CommandV1Mixin::CTX_USER_REF_FIELD, $user->getMessageRef());
     }
 }

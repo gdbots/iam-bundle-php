@@ -4,11 +4,9 @@ declare(strict_types=1);
 namespace Gdbots\Bundle\IamBundle\Security;
 
 use Gdbots\Iam\Policy;
+use Gdbots\Pbj\Message;
 use Gdbots\Pbj\SchemaCurie;
 use Gdbots\Pbjx\Pbjx;
-use Gdbots\Schemas\Iam\Mixin\Role\Role;
-use Gdbots\Schemas\Ncr\Mixin\GetNodeBatchRequest\GetNodeBatchRequest;
-use Gdbots\Schemas\Ncr\Mixin\Node\Node;
 use Gdbots\Schemas\Ncr\Request\GetNodeBatchRequestV1;
 use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -18,14 +16,9 @@ use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
 class PbjxPermissionVoter extends Voter
 {
-    /** @var Pbjx */
-    protected $pbjx;
-
-    /** @var CacheItemPoolInterface */
-    protected $cache;
-
-    /** @var RequestStack */
-    protected $requestStack;
+    protected Pbjx $pbjx;
+    protected CacheItemPoolInterface $cache;
+    protected RequestStack $requestStack;
 
     /**
      * Array of curies already checked for permission.  Key is the curie of the
@@ -33,24 +26,15 @@ class PbjxPermissionVoter extends Voter
      *
      * @var bool[]
      */
-    protected $checked = [];
+    protected array $checked = [];
 
-    /** @var Policy */
-    protected $policy = null;
+    protected ?Policy $policy = null;
 
     /**
      * Amount of time in seconds the policy will be cached.
-     *
-     * @var int
      */
-    protected $policyTtl = 300;
+    protected int $policyTtl;
 
-    /**
-     * @param Pbjx                   $pbjx
-     * @param CacheItemPoolInterface $cache
-     * @param RequestStack           $requestStack
-     * @param int                    $policyTtl
-     */
     public function __construct(
         Pbjx $pbjx,
         CacheItemPoolInterface $cache,
@@ -63,21 +47,16 @@ class PbjxPermissionVoter extends Voter
         $this->policyTtl = $policyTtl;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function supports($attribute, $subject)
     {
         if (!is_string($attribute)) {
             return false;
         }
 
+        // fixme: what about acme:article:blah
         return preg_match(SchemaCurie::VALID_PATTERN, $attribute);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function voteOnAttribute($attribute, $subject, TokenInterface $token)
     {
         if (isset($this->checked[$attribute])) {
@@ -92,11 +71,6 @@ class PbjxPermissionVoter extends Voter
         return $this->checked[$attribute] = $this->getPolicy($user)->isGranted($attribute);
     }
 
-    /**
-     * @param User $user
-     *
-     * @return Policy
-     */
     protected function getPolicy(User $user): Policy
     {
         if (null !== $this->policy) {
@@ -140,11 +114,11 @@ class PbjxPermissionVoter extends Voter
      * will be stored as serialized php.
      *
      * @param Request $symfonyRequest
-     * @param Node    $node
+     * @param Message $node
      *
      * @return string
      */
-    protected function getPolicyCacheKey(Request $symfonyRequest, Node $node): string
+    protected function getPolicyCacheKey(Request $symfonyRequest, Message $node): string
     {
         // because the policy is really based on the roles we'll cache
         // it based on that, not the user.
@@ -156,11 +130,11 @@ class PbjxPermissionVoter extends Voter
 
     /**
      * @param Request $symfonyRequest
-     * @param Node    $node
+     * @param Message $node
      *
-     * @return Role[]
+     * @return Message[]
      */
-    protected function getUsersRoles(Request $symfonyRequest, Node $node): array
+    protected function getUsersRoles(Request $symfonyRequest, Message $node): array
     {
         try {
             $request = $this->createGetRoleBatchRequest($symfonyRequest, $node)
@@ -173,11 +147,11 @@ class PbjxPermissionVoter extends Voter
 
     /**
      * @param Request $symfonyRequest
-     * @param Node    $node
+     * @param Message $node
      *
-     * @return GetNodeBatchRequest
+     * @return Message
      */
-    protected function createGetRoleBatchRequest(Request $symfonyRequest, Node $node): GetNodeBatchRequest
+    protected function createGetRoleBatchRequest(Request $symfonyRequest, Message $node): Message
     {
         // override if you need to customize the request (e.g. multi-tenant apps)
         return GetNodeBatchRequestV1::create();

@@ -3,128 +3,91 @@ declare(strict_types=1);
 
 namespace Gdbots\Bundle\IamBundle\Security;
 
-use Gdbots\Pbj\MessageRef;
-use Gdbots\Schemas\Iam\Mixin\App\App;
-use Gdbots\Schemas\Iam\Mixin\User\User as UserNode;
+use Gdbots\Pbj\Message;
+use Gdbots\Pbj\WellKnown\MessageRef;
+use Gdbots\Pbj\WellKnown\NodeRef;
+use Gdbots\Schemas\Iam\Mixin\App\AppV1Mixin;
+use Gdbots\Schemas\Iam\Mixin\User\UserV1Mixin;
 use Gdbots\Schemas\Ncr\Enum\NodeStatus;
-use Gdbots\Schemas\Ncr\Mixin\Node\Node;
-use Gdbots\Schemas\Ncr\NodeRef;
+use Gdbots\Schemas\Ncr\Mixin\Node\NodeV1Mixin;
 use Symfony\Component\Security\Core\User\EquatableInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 class User implements UserInterface, EquatableInterface
 {
-    /** @var Node|App|UserNode */
-    protected $node;
+    protected Message $node;
+    protected NodeRef $nodeRef;
+    protected MessageRef $messageRef;
+    protected array $roles = [];
 
-    /** @var NodeRef */
-    protected $nodeRef;
-
-    /** @var MessageRef */
-    protected $messageRef;
-
-    /** @var string[] */
-    protected $roles = [];
-
-    /**
-     * @param Node $node
-     */
-    public function __construct(Node $node)
+    public function __construct(Message $node)
     {
         $this->node = $node;
-        $this->nodeRef = NodeRef::fromNode($node);
+        $this->nodeRef = $node->generateNodeRef();
         $this->messageRef = $node->generateMessageRef();
 
         /** @var NodeRef $role */
-        foreach ($this->node->get('roles', []) as $role) {
+        foreach ($this->node->get(UserV1Mixin::ROLES_FIELD, []) as $role) {
             $this->roles[] = 'ROLE_' . strtoupper(str_replace('-', '_', $role->getId()));
         }
 
-        if ($this->node instanceof UserNode && $this->node->get('is_staff')) {
+        $schema = $this->node::schema();
+
+        if ($schema->hasMixin(UserV1Mixin::SCHEMA_CURIE) && $this->node->get(UserV1Mixin::IS_STAFF_FIELD)) {
             $this->roles[] = 'ROLE_USER';
             $this->roles[] = 'ROLE_STAFF';
         }
 
-        if ($this->node instanceof App) {
+        if ($schema->hasMixin(AppV1Mixin::SCHEMA_CURIE)) {
             $this->roles[] = 'ROLE_APP';
             $this->roles[] = 'ROLE_' . strtoupper(str_replace('-', '_', $this->nodeRef->getLabel()));
         }
     }
 
-    /**
-     * @return Node
-     */
-    public function getNode(): Node
+    public function getNode(): Message
     {
         return $this->node;
     }
 
-    /**
-     * @return NodeRef
-     */
     public function getNodeRef(): NodeRef
     {
         return $this->nodeRef;
     }
 
-    /**
-     * @return MessageRef
-     */
     public function getMessageRef(): MessageRef
     {
         return $this->messageRef;
     }
 
-    /**
-     * @return string
-     */
     public function getDisplayName(): ?string
     {
-        return $this->node->get('title');
+        return $this->node->get(NodeV1Mixin::TITLE_FIELD);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getRoles()
     {
         return $this->roles;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getPassword()
     {
         return null;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getSalt()
     {
         return null;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getUsername()
     {
-        return (string)$this->node->get('_id');
+        return $this->node->fget(NodeV1Mixin::_ID_FIELD);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function eraseCredentials()
     {
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function isEqualTo(UserInterface $user)
     {
         if (!$user instanceof self) {
@@ -134,17 +97,14 @@ class User implements UserInterface, EquatableInterface
         return $this->node->equals($user->node);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function isEnabled()
+    public function isEnabled(): bool
     {
-        if (!NodeStatus::PUBLISHED()->equals($this->node->get('status'))) {
+        if (NodeStatus::PUBLISHED !== $this->node->fget(NodeV1Mixin::STATUS_FIELD)) {
             return false;
         }
 
-        if ($this->node instanceof UserNode) {
-            return !$this->node->get('is_blocked');
+        if ($this->node::schema()->hasMixin(UserV1Mixin::SCHEMA_CURIE)) {
+            return !$this->node->get(UserV1Mixin::IS_BLOCKED_FIELD);
         }
 
         // apps are always enabled when published (for now)

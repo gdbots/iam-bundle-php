@@ -25,22 +25,22 @@
       </call>
     </service>
 
-    <service id="gdbots_iam.auth0_jwt_authenticator" class="Gdbots\Bundle\IamBundle\Security\Jwt\Auth0JwtAuthenticator">
+    <service id="gdbots_iam.auth0_jwt_authenticator" class="Gdbots\Bundle\IamBundle\Security\Auth0JwtAuthenticator">
       <argument type="service" id="gdbots_iam.auth0_jwt_decoder"/>
     </service>
 
-    <service id="gdbots_iam.auth0_cache_handler" class="Gdbots\Bundle\IamBundle\Security\Jwt\Auth0CacheHandler">
+    <service id="gdbots_iam.auth0_cache_handler" class="Gdbots\Bundle\IamBundle\Security\Auth0CacheHandler">
       <argument type="service" id="cache.app"/>
     </service>
 
-    <service id="gdbots_iam.auth0_jwt_decoder" class="Gdbots\Bundle\IamBundle\Security\Jwt\Auth0JwtDecoder">
+    <service id="gdbots_iam.auth0_jwt_decoder" class="Gdbots\Bundle\IamBundle\Security\Auth0JwtDecoder">
       <argument type="service" id="gdbots_iam.auth0_cache_handler"/>
       <argument>%env(AUTH0_API_IDENTIFIER)%</argument>
       <argument>%env(AUTH0_AUTHORIZED_ISSUER)%</argument>
       <argument>%env(AUTH0_SIGNING_SECRET)%</argument>
     </service>
 
-    <service id="gdbots_iam.auth0_user_provider" class="Gdbots\Bundle\IamBundle\Security\Jwt\Auth0UserProvider">
+    <service id="gdbots_iam.auth0_user_provider" class="Gdbots\Bundle\IamBundle\Security\Auth0UserProvider">
       <argument type="service" id="pbjx"/>
       <argument type="service" id="request_stack"/>
       <argument>%env(AUTH0_API_IDENTIFIER)%</argument>
@@ -55,14 +55,14 @@
     </service>
 
     <!-- binders -->
-    <service id="gdbots_iam.ctx_user_ref_binder" class="Gdbots\Bundle\IamBundle\Binder\CtxUserRefBinder">
+    <service id="gdbots_iam.ctx_user_ref_binder" class="Gdbots\Bundle\IamBundle\CtxUserRefBinder">
       <argument type="service" id="security.token_storage"/>
       <tag name="pbjx.event_subscriber"/>
       <tag name="pbjx.binder"/>
     </service>
 
     <!-- validators -->
-    <service id="gdbots_iam.pbjx_permission_validator" class="Gdbots\Bundle\IamBundle\Validator\PbjxPermissionValidator">
+    <service id="gdbots_iam.pbjx_permission_validator" class="Gdbots\Bundle\IamBundle\PbjxPermissionValidator">
       <argument type="service" id="request_stack"/>
       <argument type="service" id="security.authorization_checker"/>
       <tag name="pbjx.event_subscriber"/>

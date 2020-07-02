@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Gdbots\Bundle\IamBundle\Security\Jwt;
+namespace Gdbots\Bundle\IamBundle\Security;
 
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\UserInterface;
