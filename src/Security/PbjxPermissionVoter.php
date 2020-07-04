@@ -4,81 +4,48 @@ declare(strict_types=1);
 namespace Gdbots\Bundle\IamBundle\Security;
 
 use Gdbots\Iam\Policy;
-use Gdbots\Pbj\SchemaCurie;
+use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\Pbjx;
-use Gdbots\Schemas\Iam\Mixin\Role\Role;
-use Gdbots\Schemas\Ncr\Mixin\GetNodeBatchRequest\GetNodeBatchRequest;
-use Gdbots\Schemas\Ncr\Mixin\Node\Node;
+use Gdbots\Schemas\Iam\Mixin\User\UserV1Mixin;
 use Gdbots\Schemas\Ncr\Request\GetNodeBatchRequestV1;
+use Gdbots\Schemas\Ncr\Request\GetNodeBatchResponseV1;
 use Psr\Cache\CacheItemPoolInterface;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
 class PbjxPermissionVoter extends Voter
 {
-    /** @var Pbjx */
-    protected $pbjx;
-
-    /** @var CacheItemPoolInterface */
-    protected $cache;
-
-    /** @var RequestStack */
-    protected $requestStack;
+    protected Pbjx $pbjx;
+    protected CacheItemPoolInterface $cache;
 
     /**
-     * Array of curies already checked for permission.  Key is the curie of the
+     * Array of curies already checked for permission. Key is the curie of the
      * message, value is the result
      *
      * @var bool[]
      */
-    protected $checked = [];
+    protected array $checked = [];
 
-    /** @var Policy */
-    protected $policy = null;
+    protected ?Policy $policy = null;
 
     /**
      * Amount of time in seconds the policy will be cached.
-     *
-     * @var int
      */
-    protected $policyTtl = 300;
+    protected int $policyTtl;
 
-    /**
-     * @param Pbjx                   $pbjx
-     * @param CacheItemPoolInterface $cache
-     * @param RequestStack           $requestStack
-     * @param int                    $policyTtl
-     */
-    public function __construct(
-        Pbjx $pbjx,
-        CacheItemPoolInterface $cache,
-        RequestStack $requestStack,
-        int $policyTtl = 300
-    ) {
+    public function __construct(Pbjx $pbjx, CacheItemPoolInterface $cache, int $policyTtl = 300)
+    {
         $this->pbjx = $pbjx;
         $this->cache = $cache;
-        $this->requestStack = $requestStack;
         $this->policyTtl = $policyTtl;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function supports($attribute, $subject)
+    protected function supports(string $attribute, $subject)
     {
-        if (!is_string($attribute)) {
-            return false;
-        }
-
-        return preg_match(SchemaCurie::VALID_PATTERN, $attribute);
+        return $subject instanceof Message || preg_match('/^[a-z0-9-]+:([a-z0-9\.-]+:){1,2}[\w\/\.:-]*$/', $attribute);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function voteOnAttribute($attribute, $subject, TokenInterface $token)
+    protected function voteOnAttribute(string $attribute, $subject, TokenInterface $token)
     {
         if (isset($this->checked[$attribute])) {
             return $this->checked[$attribute];
@@ -92,11 +59,6 @@ class PbjxPermissionVoter extends Voter
         return $this->checked[$attribute] = $this->getPolicy($user)->isGranted($attribute);
     }
 
-    /**
-     * @param User $user
-     *
-     * @return Policy
-     */
     protected function getPolicy(User $user): Policy
     {
         if (null !== $this->policy) {
@@ -104,13 +66,12 @@ class PbjxPermissionVoter extends Voter
         }
 
         $node = $user->getNode();
-        if (!$node->has('roles')) {
+        if (!$node->has(UserV1Mixin::ROLES_FIELD)) {
             // make an empty policy with no permissions
             return $this->policy = new Policy();
         }
 
-        $symfonyRequest = $this->requestStack->getCurrentRequest();
-        $cacheItem = $this->cache->getItem($this->getPolicyCacheKey($symfonyRequest, $node));
+        $cacheItem = $this->cache->getItem($this->getPolicyCacheKey($node));
         if ($cacheItem->isHit()) {
             $policy = $cacheItem->get();
             if ($policy instanceof Policy) {
@@ -118,10 +79,7 @@ class PbjxPermissionVoter extends Voter
             }
         }
 
-        $symfonyRequest->attributes->set('iam_bypass_permissions', true);
-        $this->policy = new Policy($this->getUsersRoles($symfonyRequest, $node));
-        $symfonyRequest->attributes->remove('iam_bypass_permissions');
-
+        $this->policy = new Policy($this->getUsersRoles($node));
         $cacheItem->set($this->policy)->expiresAfter($this->policyTtl);
         $this->cache->saveDeferred($cacheItem);
 
@@ -129,9 +87,6 @@ class PbjxPermissionVoter extends Voter
     }
 
     /**
-     * Returns the policy cache key to use for the provided
-     * Symfony request and the current user.
-     *
      * This must be compliant with psr6 "Key" definition.
      *
      * @link http://www.php-fig.org/psr/psr-6/#definitions
@@ -139,47 +94,36 @@ class PbjxPermissionVoter extends Voter
      * The ".php" suffix here is used because the cache item
      * will be stored as serialized php.
      *
-     * @param Request $symfonyRequest
-     * @param Node    $node
+     * @param Message $node
      *
      * @return string
      */
-    protected function getPolicyCacheKey(Request $symfonyRequest, Node $node): string
+    protected function getPolicyCacheKey(Message $node): string
     {
         // because the policy is really based on the roles we'll cache
         // it based on that, not the user.
-        $roles = array_map('strval', $node->get('roles', []));
+        $roles = array_map('strval', $node->get(UserV1Mixin::ROLES_FIELD, []));
         sort($roles);
         $hash = md5(implode('', $roles));
         return "policy.{$hash}.php";
     }
 
     /**
-     * @param Request $symfonyRequest
-     * @param Node    $node
+     * @param Message $node
      *
-     * @return Role[]
+     * @return Message[]
      */
-    protected function getUsersRoles(Request $symfonyRequest, Node $node): array
+    protected function getUsersRoles(Message $node): array
     {
         try {
-            $request = $this->createGetRoleBatchRequest($symfonyRequest, $node)
-                ->addToSet('node_refs', $node->get('roles', []));
-            return $this->pbjx->request($request)->get('nodes', []);
+            $request = GetNodeBatchRequestV1::create()->addToSet(
+                GetNodeBatchRequestV1::NODE_REFS_FIELD,
+                $node->get(UserV1Mixin::ROLES_FIELD, [])
+            );
+            $request->set(GetNodeBatchRequestV1::CTX_CAUSATOR_REF_FIELD, $request->generateMessageRef());
+            return $this->pbjx->request($request)->get(GetNodeBatchResponseV1::NODES_FIELD, []);
         } catch (\Throwable $e) {
             return [];
         }
-    }
-
-    /**
-     * @param Request $symfonyRequest
-     * @param Node    $node
-     *
-     * @return GetNodeBatchRequest
-     */
-    protected function createGetRoleBatchRequest(Request $symfonyRequest, Node $node): GetNodeBatchRequest
-    {
-        // override if you need to customize the request (e.g. multi-tenant apps)
-        return GetNodeBatchRequestV1::create();
     }
 }

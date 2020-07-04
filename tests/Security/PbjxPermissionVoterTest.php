@@ -10,15 +10,13 @@ use Gdbots\Bundle\IamBundle\Security\PbjxPermissionVoter;
 use Gdbots\Bundle\IamBundle\Security\User;
 use Gdbots\Ncr\GetNodeBatchRequestHandler;
 use Gdbots\Ncr\Repository\InMemoryNcr;
+use Gdbots\Pbj\WellKnown\NodeRef;
 use Gdbots\Pbjx\Pbjx;
 use Gdbots\Pbjx\RegisteringServiceLocator;
 use Gdbots\Schemas\Iam\RoleId;
-use Gdbots\Schemas\Ncr\NodeRef;
 use Gdbots\Schemas\Ncr\Request\GetNodeBatchRequestV1;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Authentication\Token\AbstractToken;
 use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 
@@ -38,19 +36,12 @@ class ConcreteToken extends AbstractToken
 
 class PbjxPermissionVoterTest extends TestCase
 {
-    /** @var RegisteringServiceLocator */
-    protected $locator;
+    protected RegisteringServiceLocator $locator;
+    protected Pbjx $pbjx;
+    protected InMemoryNcr $ncr;
+    protected VoterInterface $voter;
 
-    /** @var Pbjx */
-    protected $pbjx;
-
-    /** @var InMemoryNcr */
-    protected $ncr;
-
-    /** @var VoterInterface */
-    protected $voter;
-
-    protected function setup()
+    protected function setUp(): void
     {
         $this->locator = new RegisteringServiceLocator();
         $this->pbjx = $this->locator->getPbjx();
@@ -58,9 +49,7 @@ class PbjxPermissionVoterTest extends TestCase
 
         $handler = new GetNodeBatchRequestHandler($this->ncr);
         $this->locator->registerRequestHandler(GetNodeBatchRequestV1::schema()->getCurie(), $handler);
-        $requestStack = new RequestStack();
-        $requestStack->push(new Request());
-        $this->voter = new PbjxPermissionVoter($this->pbjx, new ArrayAdapter(), $requestStack);
+        $this->voter = new PbjxPermissionVoter($this->pbjx, new ArrayAdapter());
 
         $this->ncr->putNode(
             RoleV1::create()
@@ -71,23 +60,15 @@ class PbjxPermissionVoterTest extends TestCase
         $this->ncr->putNode(
             RoleV1::create()
                 ->set('_id', RoleId::fromString('subscriber'))
-                ->addToSet('allowed', ['acme:blog:request:*'])
+                ->addToSet('allowed', ['acme:blog:request:*','acme:article:get'])
                 ->addToSet('denied', ['acme:blog:command:*'])
         );
 
         $this->ncr->putNode(
             RoleV1::create()
                 ->set('_id', RoleId::fromString('editor'))
-                ->addToSet('allowed', ['acme:blog:*'])
+                ->addToSet('allowed', ['acme:blog:*','acme:article:*'])
         );
-    }
-
-    protected function tearDown()
-    {
-        $this->locator = null;
-        $this->pbjx = null;
-        $this->ncr = null;
-        $this->voter = null;
     }
 
     /**
@@ -98,7 +79,7 @@ class PbjxPermissionVoterTest extends TestCase
      * @param string $message
      * @param int    $expected
      */
-    public function testVoteForUser(array $roles = [], array $attributes = [], string $message, int $expected)
+    public function testVoteForUser(array $roles, array $attributes, string $message, int $expected)
     {
         $user = new User(UserV1::create()->addToSet('roles', $roles));
         $token = new ConcreteToken($user, $user->getRoles());
@@ -114,16 +95,13 @@ class PbjxPermissionVoterTest extends TestCase
      * @param string $message
      * @param int    $expected
      */
-    public function testVoteForApp(array $roles = [], array $attributes = [], string $message, int $expected)
+    public function testVoteForApp(array $roles, array $attributes, string $message, int $expected)
     {
         $user = new User(IosAppV1::create()->addToSet('roles', $roles));
         $token = new ConcreteToken($user, $user->getRoles());
         $this->assertEquals($expected, $this->voter->vote($token, null, $attributes), $message);
     }
 
-    /**
-     * @return array
-     */
     public function getDataSamples(): array
     {
         return [
@@ -162,6 +140,33 @@ class PbjxPermissionVoterTest extends TestCase
                 'attributes' => ['acme-blog-create-article'],
                 'message'    => 'Curie is invalid, must follow Schemacurie format',
                 'expected'   => VoterInterface::ACCESS_ABSTAIN,
+            ],
+
+            [
+                'roles'      => [
+                    NodeRef::fromString('acme:role:editor'),
+                ],
+                'attributes' => ['acme:article:publish'],
+                'message'    => 'Editor should be able to publish article.',
+                'expected'   => VoterInterface::ACCESS_GRANTED,
+            ],
+
+            [
+                'roles'      => [
+                    NodeRef::fromString('acme:role:subscriber'),
+                ],
+                'attributes' => ['acme:article:publish'],
+                'message'    => 'Subscriber should not be able to publish article.',
+                'expected'   => VoterInterface::ACCESS_DENIED,
+            ],
+
+            [
+                'roles'      => [
+                    NodeRef::fromString('acme:role:subscriber'),
+                ],
+                'attributes' => ['acme:article:get'],
+                'message'    => 'Subscriber should be able to get article',
+                'expected'   => VoterInterface::ACCESS_GRANTED,
             ],
 
             [
