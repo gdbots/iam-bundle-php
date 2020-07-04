@@ -6,50 +6,45 @@
   <!-- This provider requires "auth0/auth0-php" library. -->
 
   <parameters>
-    <parameter key="env(AUTH0_API_IDENTIFIER)"/>
-    <parameter key="env(AUTH0_AUTHORIZED_ISSUER)"/>
-    <parameter key="env(AUTH0_SIGNING_SECRET)"/>
+    <parameter key="env(AUTH0_AUDIENCE)"/>
+    <parameter key="env(AUTH0_DOMAIN)"/>
+    <parameter key="env(AUTH0_CURRENT_SIGNING_SECRET)"/>
+    <parameter key="env(AUTH0_NEXT_SIGNING_SECRET)"/>
     <parameter key="env(IAM_POLICY_TTL)">300</parameter>
-    <parameter key="gdbots_iam.auth0_controller.class">Gdbots\Bundle\IamBundle\Controller\Auth0Controller</parameter>
-    <parameter key="gdbots_iam.pbjx_permission_voter.class">Gdbots\Bundle\IamBundle\Security\PbjxPermissionVoter</parameter>
-
   </parameters>
 
   <services>
     <defaults public="false"/>
 
-    <service id="gdbots_iam.auth0_controller" class="%gdbots_iam.auth0_controller.class%" public="true">
+    <service id="gdbots_iam.auth0_controller" class="Gdbots\Bundle\IamBundle\Controller\Auth0Controller" public="true">
       <argument type="service" id="pbjx"/>
       <call method="setContainer">
         <argument type="service" id="service_container"/>
       </call>
     </service>
 
-    <service id="gdbots_iam.auth0_jwt_authenticator" class="Gdbots\Bundle\IamBundle\Security\Auth0JwtAuthenticator">
+    <service id="gdbots_iam.auth0_jwt_decoder" class="Gdbots\Bundle\IamBundle\Security\Auth0JwtDecoder">
+      <argument type="service" id="cache.app"/>
+      <argument>%env(AUTH0_AUDIENCE)%</argument>
+      <argument>https://%env(AUTH0_DOMAIN)%/</argument>
+      <argument type="collection">
+        <argument>%env(AUTH0_CURRENT_SIGNING_SECRET)%</argument>
+        <argument>%env(AUTH0_NEXT_SIGNING_SECRET)%</argument>
+      </argument>
+    </service>
+
+    <service id="gdbots_iam.jwt_authenticator" class="Gdbots\Bundle\IamBundle\Security\JwtAuthenticator">
       <argument type="service" id="gdbots_iam.auth0_jwt_decoder"/>
     </service>
 
-    <service id="gdbots_iam.auth0_cache_handler" class="Gdbots\Bundle\IamBundle\Security\Auth0CacheHandler">
-      <argument type="service" id="cache.app"/>
-    </service>
-
-    <service id="gdbots_iam.auth0_jwt_decoder" class="Gdbots\Bundle\IamBundle\Security\Auth0JwtDecoder">
-      <argument type="service" id="gdbots_iam.auth0_cache_handler"/>
-      <argument>%env(AUTH0_API_IDENTIFIER)%</argument>
-      <argument>%env(AUTH0_AUTHORIZED_ISSUER)%</argument>
-      <argument>%env(AUTH0_SIGNING_SECRET)%</argument>
-    </service>
-
-    <service id="gdbots_iam.auth0_user_provider" class="Gdbots\Bundle\IamBundle\Security\Auth0UserProvider">
+    <service id="gdbots_iam.jwt_user_provider" class="Gdbots\Bundle\IamBundle\Security\JwtUserProvider">
       <argument type="service" id="pbjx"/>
-      <argument type="service" id="request_stack"/>
-      <argument>%env(AUTH0_API_IDENTIFIER)%</argument>
+      <argument>%env(AUTH0_AUDIENCE)%</argument>
     </service>
 
-    <service id="gdbots_iam.pbjx_permission_voter" class="%gdbots_iam.pbjx_permission_voter.class%">
+    <service id="gdbots_iam.pbjx_permission_voter" class="Gdbots\Bundle\IamBundle\Security\PbjxPermissionVoter">
       <argument type="service" id="pbjx"/>
       <argument type="service" id="cache.app"/>
-      <argument type="service" id="request_stack"/>
       <argument>%env(int:IAM_POLICY_TTL)%</argument>
       <tag name="security.voter"/>
     </service>

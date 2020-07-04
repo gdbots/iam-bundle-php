@@ -6,11 +6,12 @@ namespace Gdbots\Bundle\IamBundle\Security;
 interface JwtDecoder
 {
     /**
+     * Decodes and verifies the JWT and returns the payload
+     * portion of the decoded JWT.
+     *
      * @param string $jwt
      *
-     * @return \stdClass
-     *
-     * @throws \Throwable
+     * @return array
      */
-    public function decode(string $jwt): \stdClass;
+    public function decode(string $jwt): array;
 }

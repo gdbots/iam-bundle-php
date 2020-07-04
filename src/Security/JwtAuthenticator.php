@@ -16,11 +16,11 @@ use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Guard\AbstractGuardAuthenticator;
 
-class Auth0JwtAuthenticator extends AbstractGuardAuthenticator
+class JwtAuthenticator extends AbstractGuardAuthenticator
 {
-    protected Auth0JwtDecoder $decoder;
+    protected JwtDecoder $decoder;
 
-    public function __construct(Auth0JwtDecoder $decoder)
+    public function __construct(JwtDecoder $decoder)
     {
         $this->decoder = $decoder;
     }
@@ -47,14 +47,14 @@ class Auth0JwtAuthenticator extends AbstractGuardAuthenticator
             return null;
         }
 
-        $jwt = str_ireplace('bearer ', '', $credentials);
-
         try {
-            $token = $this->decoder->decode($jwt);
-            return $userProvider->loadUserByJwt($token);
+            $jwt = str_ireplace('bearer ', '', $credentials);
+            $payload = $this->decoder->decode($jwt);
         } catch (\Throwable $e) {
-            throw new BadCredentialsException('Invalid token.');
+            throw new BadCredentialsException($e->getMessage(), Code::UNAUTHENTICATED, $e);
         }
+
+        return $userProvider->loadUserByJwt($payload);
     }
 
     public function checkCredentials($credentials, UserInterface $user)
@@ -69,10 +69,11 @@ class Auth0JwtAuthenticator extends AbstractGuardAuthenticator
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception)
     {
+        $code = $exception->getCode() > 0 ? $exception->getCode() : Code::UNAUTHENTICATED;
         $envelope = EnvelopeV1::create()
             ->set(EnvelopeV1::OK_FIELD, false)
-            ->set(EnvelopeV1::CODE_FIELD, Code::PERMISSION_DENIED)
-            ->set(EnvelopeV1::HTTP_CODE_FIELD, HttpCode::HTTP_FORBIDDEN())
+            ->set(EnvelopeV1::CODE_FIELD, $code)
+            ->set(EnvelopeV1::HTTP_CODE_FIELD, HttpCode::HTTP_UNAUTHORIZED())
             ->set(EnvelopeV1::ERROR_NAME_FIELD, ClassUtil::getShortName($exception))
             ->set(EnvelopeV1::ERROR_MESSAGE_FIELD, $exception->getMessage());
 

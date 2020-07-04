@@ -17,8 +17,6 @@ use Gdbots\Schemas\Ncr\NodeRef;
 use Gdbots\Schemas\Ncr\Request\GetNodeBatchRequestV1;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Authentication\Token\AbstractToken;
 use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 
@@ -38,19 +36,12 @@ class ConcreteToken extends AbstractToken
 
 class PbjxPermissionVoterTest extends TestCase
 {
-    /** @var RegisteringServiceLocator */
-    protected $locator;
+    protected RegisteringServiceLocator $locator;
+    protected Pbjx $pbjx;
+    protected InMemoryNcr $ncr;
+    protected VoterInterface $voter;
 
-    /** @var Pbjx */
-    protected $pbjx;
-
-    /** @var InMemoryNcr */
-    protected $ncr;
-
-    /** @var VoterInterface */
-    protected $voter;
-
-    protected function setup()
+    protected function setUp(): void
     {
         $this->locator = new RegisteringServiceLocator();
         $this->pbjx = $this->locator->getPbjx();
@@ -58,9 +49,7 @@ class PbjxPermissionVoterTest extends TestCase
 
         $handler = new GetNodeBatchRequestHandler($this->ncr);
         $this->locator->registerRequestHandler(GetNodeBatchRequestV1::schema()->getCurie(), $handler);
-        $requestStack = new RequestStack();
-        $requestStack->push(new Request());
-        $this->voter = new PbjxPermissionVoter($this->pbjx, new ArrayAdapter(), $requestStack);
+        $this->voter = new PbjxPermissionVoter($this->pbjx, new ArrayAdapter());
 
         $this->ncr->putNode(
             RoleV1::create()
