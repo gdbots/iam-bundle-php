@@ -24,7 +24,7 @@ class Auth0JwtDecoder implements JwtDecoder
      * which is only used in an Auth0 rule that enriches
      * the final token, which is signed using RS256.
      *
-     * @var string
+     * @var string[]
      */
     protected array $keys;
 
