@@ -8,10 +8,8 @@ use Gdbots\Pbj\SchemaCurie;
 use Gdbots\Pbj\WellKnown\MessageRef;
 use Gdbots\Pbj\WellKnown\NodeRef;
 use Gdbots\Pbjx\Pbjx;
-use Gdbots\Schemas\Iam\Mixin\User\UserV1Mixin;
 use Gdbots\Schemas\Iam\Request\GetUserRequestV1;
 use Gdbots\Schemas\Ncr\Request\GetNodeRequestV1;
-use Gdbots\Schemas\Ncr\Request\GetNodeResponseV1;
 use Symfony\Component\Security\Core\Exception\DisabledException;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
@@ -70,11 +68,11 @@ class JwtUserProvider implements UserProviderInterface
     {
         try {
             $request = GetNodeRequestV1::create()
-                ->set(GetNodeRequestV1::NODE_REF_FIELD, $nodeRef)
-                ->set(GetNodeRequestV1::CTX_TENANT_ID_FIELD, $tenantId);
-            $request->set(GetNodeRequestV1::CTX_CAUSATOR_REF_FIELD, $request->generateMessageRef());
+                ->set('node_ref', $nodeRef)
+                ->set('ctx_tenant_id', $tenantId);
+            $request->set('ctx_causator_ref', $request->generateMessageRef());
             $response = $this->pbjx->request($request);
-            $user = new User($response->get(GetNodeResponseV1::NODE_FIELD));
+            $user = new User($response->get('node'));
             if (!$user->isEnabled()) {
                 throw new DisabledException("Your {$nodeRef->getLabel()} account is disabled.");
             }
@@ -91,16 +89,16 @@ class JwtUserProvider implements UserProviderInterface
     {
         try {
             $userCurie = SchemaCurie::fromString(
-                MessageResolver::findOneUsingMixin(UserV1Mixin::SCHEMA_CURIE_MAJOR, false)
+                MessageResolver::findOneUsingMixin('gdbots:iam:mixin:user:v1', false)
             );
 
             $request = GetUserRequestV1::create()
-                ->set(GetUserRequestV1::CTX_TENANT_ID_FIELD, $tenantId)
-                ->set(GetUserRequestV1::QNAME_FIELD, $userCurie->getQName()->toString())
-                ->set(GetUserRequestV1::EMAIL_FIELD, $email);
-            $request->set(GetUserRequestV1::CTX_CAUSATOR_REF_FIELD, $request->generateMessageRef());
+                ->set('ctx_tenant_id', $tenantId)
+                ->set('qname', $userCurie->getQName()->toString())
+                ->set('email', $email);
+            $request->set('ctx_causator_ref', $request->generateMessageRef());
             $response = $this->pbjx->request($request);
-            $user = new User($response->get(GetNodeResponseV1::NODE_FIELD));
+            $user = new User($response->get('node'));
             if (!$user->isEnabled()) {
                 throw new DisabledException('Your account is disabled.');
             }

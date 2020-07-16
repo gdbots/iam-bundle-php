@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 2.x versions.
 
 
+## v2.0.1
+* Use `TokenVerifier` instead of `IdTokenVerifier` in `Auth0JwtDecoder::decodeRS256` because we are validating an access token not an id token.
+
+
 ## v2.0.0
 __BREAKING CHANGES__
 

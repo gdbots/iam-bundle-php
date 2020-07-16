@@ -71,16 +71,16 @@ class JwtAuthenticator extends AbstractGuardAuthenticator
     {
         $code = $exception->getCode() > 0 ? $exception->getCode() : Code::UNAUTHENTICATED;
         $envelope = EnvelopeV1::create()
-            ->set(EnvelopeV1::OK_FIELD, false)
-            ->set(EnvelopeV1::CODE_FIELD, $code)
-            ->set(EnvelopeV1::HTTP_CODE_FIELD, HttpCode::HTTP_UNAUTHORIZED())
-            ->set(EnvelopeV1::ERROR_NAME_FIELD, ClassUtil::getShortName($exception))
-            ->set(EnvelopeV1::ERROR_MESSAGE_FIELD, $exception->getMessage());
+            ->set('ok', false)
+            ->set('code', $code)
+            ->set('http_code', HttpCode::HTTP_UNAUTHORIZED())
+            ->set('error_name', ClassUtil::getShortName($exception))
+            ->set('error_message', $exception->getMessage());
 
         return new JsonResponse($envelope->toArray(), HttpCode::HTTP_UNAUTHORIZED, [
             'Content-Type'       => 'application/json',
-            'ETag'               => $envelope->get(EnvelopeV1::ETAG_FIELD),
-            'x-pbjx-envelope-id' => (string)$envelope->get(EnvelopeV1::ENVELOPE_ID_FIELD),
+            'ETag'               => $envelope->get('etag'),
+            'x-pbjx-envelope-id' => (string)$envelope->get('envelope_id'),
         ]);
     }
 

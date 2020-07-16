@@ -6,10 +6,7 @@ namespace Gdbots\Bundle\IamBundle\Security;
 use Gdbots\Pbj\Message;
 use Gdbots\Pbj\WellKnown\MessageRef;
 use Gdbots\Pbj\WellKnown\NodeRef;
-use Gdbots\Schemas\Iam\Mixin\App\AppV1Mixin;
-use Gdbots\Schemas\Iam\Mixin\User\UserV1Mixin;
 use Gdbots\Schemas\Ncr\Enum\NodeStatus;
-use Gdbots\Schemas\Ncr\Mixin\Node\NodeV1Mixin;
 use Symfony\Component\Security\Core\User\EquatableInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
@@ -27,18 +24,18 @@ class User implements UserInterface, EquatableInterface
         $this->messageRef = $node->generateMessageRef();
 
         /** @var NodeRef $role */
-        foreach ($this->node->get(UserV1Mixin::ROLES_FIELD, []) as $role) {
+        foreach ($this->node->get('roles', []) as $role) {
             $this->roles[] = 'ROLE_' . strtoupper(str_replace('-', '_', $role->getId()));
         }
 
         $schema = $this->node::schema();
 
-        if ($schema->hasMixin(UserV1Mixin::SCHEMA_CURIE) && $this->node->get(UserV1Mixin::IS_STAFF_FIELD)) {
+        if ($schema->hasMixin('gdbots:iam:mixin:user') && $this->node->get('is_staff')) {
             $this->roles[] = 'ROLE_USER';
             $this->roles[] = 'ROLE_STAFF';
         }
 
-        if ($schema->hasMixin(AppV1Mixin::SCHEMA_CURIE)) {
+        if ($schema->hasMixin('gdbots:iam:mixin:app')) {
             $this->roles[] = 'ROLE_APP';
             $this->roles[] = 'ROLE_' . strtoupper(str_replace('-', '_', $this->nodeRef->getLabel()));
         }
@@ -61,7 +58,7 @@ class User implements UserInterface, EquatableInterface
 
     public function getDisplayName(): ?string
     {
-        return $this->node->get(NodeV1Mixin::TITLE_FIELD);
+        return $this->node->get('title');
     }
 
     public function getRoles()
@@ -81,7 +78,7 @@ class User implements UserInterface, EquatableInterface
 
     public function getUsername()
     {
-        return $this->node->fget(NodeV1Mixin::_ID_FIELD);
+        return $this->node->fget('_id');
     }
 
     public function eraseCredentials()
@@ -99,12 +96,12 @@ class User implements UserInterface, EquatableInterface
 
     public function isEnabled(): bool
     {
-        if (NodeStatus::PUBLISHED !== $this->node->fget(NodeV1Mixin::STATUS_FIELD)) {
+        if (NodeStatus::PUBLISHED !== $this->node->fget('status')) {
             return false;
         }
 
-        if ($this->node::schema()->hasMixin(UserV1Mixin::SCHEMA_CURIE)) {
-            return !$this->node->get(UserV1Mixin::IS_BLOCKED_FIELD);
+        if ($this->node::schema()->hasMixin('gdbots:iam:mixin:user')) {
+            return !$this->node->get('is_blocked');
         }
 
         // apps are always enabled when published (for now)

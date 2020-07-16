@@ -6,9 +6,7 @@ namespace Gdbots\Bundle\IamBundle\Security;
 use Gdbots\Iam\Policy;
 use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\Pbjx;
-use Gdbots\Schemas\Iam\Mixin\User\UserV1Mixin;
 use Gdbots\Schemas\Ncr\Request\GetNodeBatchRequestV1;
-use Gdbots\Schemas\Ncr\Request\GetNodeBatchResponseV1;
 use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
@@ -66,7 +64,7 @@ class PbjxPermissionVoter extends Voter
         }
 
         $node = $user->getNode();
-        if (!$node->has(UserV1Mixin::ROLES_FIELD)) {
+        if (!$node->has('roles')) {
             // make an empty policy with no permissions
             return $this->policy = new Policy();
         }
@@ -102,7 +100,7 @@ class PbjxPermissionVoter extends Voter
     {
         // because the policy is really based on the roles we'll cache
         // it based on that, not the user.
-        $roles = array_map('strval', $node->get(UserV1Mixin::ROLES_FIELD, []));
+        $roles = array_map('strval', $node->get('roles', []));
         sort($roles);
         $hash = md5(implode('', $roles));
         return "policy.{$hash}.php";
@@ -116,12 +114,10 @@ class PbjxPermissionVoter extends Voter
     protected function getUsersRoles(Message $node): array
     {
         try {
-            $request = GetNodeBatchRequestV1::create()->addToSet(
-                GetNodeBatchRequestV1::NODE_REFS_FIELD,
-                $node->get(UserV1Mixin::ROLES_FIELD, [])
-            );
-            $request->set(GetNodeBatchRequestV1::CTX_CAUSATOR_REF_FIELD, $request->generateMessageRef());
-            return $this->pbjx->request($request)->get(GetNodeBatchResponseV1::NODES_FIELD, []);
+            $request = GetNodeBatchRequestV1::create()
+                ->addToSet('node_refs', $node->get('roles', []));
+            $request->set('ctx_causator_ref', $request->generateMessageRef());
+            return $this->pbjx->request($request)->get('nodes', []);
         } catch (\Throwable $e) {
             return [];
         }

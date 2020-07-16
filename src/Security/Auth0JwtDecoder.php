@@ -6,7 +6,6 @@ namespace Gdbots\Bundle\IamBundle\Security;
 use Auth0\SDK\Exception\InvalidTokenException;
 use Auth0\SDK\Helpers\JWKFetcher;
 use Auth0\SDK\Helpers\Tokens\AsymmetricVerifier;
-use Auth0\SDK\Helpers\Tokens\IdTokenVerifier;
 use Auth0\SDK\Helpers\Tokens\SymmetricVerifier;
 use Auth0\SDK\Helpers\Tokens\TokenVerifier;
 use Gdbots\Schemas\Pbjx\Enum\Code;
@@ -57,7 +56,7 @@ class Auth0JwtDecoder implements JwtDecoder
     {
         $jwks = $this->jwkFetcher->getKeys($this->issuer . '.well-known/jwks.json');
         $signatureVerifier = new AsymmetricVerifier($jwks);
-        $tokenVerifier = new IdTokenVerifier($this->issuer, $this->audience, $signatureVerifier);
+        $tokenVerifier = new TokenVerifier($this->issuer, $this->audience, $signatureVerifier);
         return $tokenVerifier->verify($jwt);
     }
 

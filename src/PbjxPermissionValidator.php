@@ -9,23 +9,6 @@ use Gdbots\Pbj\WellKnown\NodeRef;
 use Gdbots\Pbjx\DependencyInjection\PbjxValidator;
 use Gdbots\Pbjx\Event\PbjxEvent;
 use Gdbots\Pbjx\EventSubscriber;
-use Gdbots\Schemas\Ncr\Mixin\CreateNode\CreateNodeV1Mixin;
-use Gdbots\Schemas\Ncr\Mixin\DeleteNode\DeleteNodeV1Mixin;
-use Gdbots\Schemas\Ncr\Mixin\ExpireNode\ExpireNodeV1Mixin;
-use Gdbots\Schemas\Ncr\Mixin\GetNodeBatchRequest\GetNodeBatchRequestV1Mixin;
-use Gdbots\Schemas\Ncr\Mixin\GetNodeRequest\GetNodeRequestV1Mixin;
-use Gdbots\Schemas\Ncr\Mixin\LockNode\LockNodeV1Mixin;
-use Gdbots\Schemas\Ncr\Mixin\MarkNodeAsDraft\MarkNodeAsDraftV1Mixin;
-use Gdbots\Schemas\Ncr\Mixin\MarkNodeAsPending\MarkNodeAsPendingV1Mixin;
-use Gdbots\Schemas\Ncr\Mixin\PatchNode\PatchNodeV1Mixin;
-use Gdbots\Schemas\Ncr\Mixin\PatchNodes\PatchNodesV1Mixin;
-use Gdbots\Schemas\Ncr\Mixin\PublishNode\PublishNodeV1Mixin;
-use Gdbots\Schemas\Ncr\Mixin\RenameNode\RenameNodeV1Mixin;
-use Gdbots\Schemas\Ncr\Mixin\UnlockNode\UnlockNodeV1Mixin;
-use Gdbots\Schemas\Ncr\Mixin\UnpublishNode\UnpublishNodeV1Mixin;
-use Gdbots\Schemas\Ncr\Mixin\UpdateNode\UpdateNodeV1Mixin;
-use Gdbots\Schemas\Ncr\Request\GetNodeHistoryRequestV1;
-use Gdbots\Schemas\Pbjx\Mixin\Event\EventV1Mixin;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -34,21 +17,21 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 class PbjxPermissionValidator implements EventSubscriber, PbjxValidator
 {
     protected const MIXINS_TO_ACTION = [
-        CreateNodeV1Mixin::SCHEMA_CURIE          => 'create',
-        DeleteNodeV1Mixin::SCHEMA_CURIE          => 'delete',
-        ExpireNodeV1Mixin::SCHEMA_CURIE          => 'expire',
-        GetNodeRequestV1Mixin::SCHEMA_CURIE      => 'get',
-        GetNodeBatchRequestV1Mixin::SCHEMA_CURIE => 'get',
-        LockNodeV1Mixin::SCHEMA_CURIE            => 'lock',
-        MarkNodeAsDraftV1Mixin::SCHEMA_CURIE     => 'mark-as-draft',
-        MarkNodeAsPendingV1Mixin::SCHEMA_CURIE   => 'mark-as-pending',
-        PatchNodeV1Mixin::SCHEMA_CURIE           => 'patch',
-        PatchNodesV1Mixin::SCHEMA_CURIE          => 'patch',
-        PublishNodeV1Mixin::SCHEMA_CURIE         => 'publish',
-        RenameNodeV1Mixin::SCHEMA_CURIE          => 'rename',
-        UnlockNodeV1Mixin::SCHEMA_CURIE          => 'unlock',
-        UnpublishNodeV1Mixin::SCHEMA_CURIE       => 'unpublish',
-        UpdateNodeV1Mixin::SCHEMA_CURIE          => 'update',
+        'gdbots:ncr:mixin:create-node'            => 'create',
+        'gdbots:ncr:mixin:delete-node'            => 'delete',
+        'gdbots:ncr:mixin:expire-node'            => 'expire',
+        'gdbots:ncr:mixin:get-node-request'       => 'get',
+        'gdbots:ncr:mixin:get-node-batch-request' => 'get',
+        'gdbots:ncr:mixin:lock-node'              => 'lock',
+        'gdbots:ncr:mixin:mark-node-as-draft'     => 'mark-as-draft',
+        'gdbots:ncr:mixin:mark-node-as-pending'   => 'mark-as-pending',
+        'gdbots:ncr:mixin:patch-node'             => 'patch',
+        'gdbots:ncr:mixin:patch-nodes'            => 'patch',
+        'gdbots:ncr:mixin:publish-node'           => 'publish',
+        'gdbots:ncr:mixin:rename-node'            => 'rename',
+        'gdbots:ncr:mixin:unlock-node'            => 'unlock',
+        'gdbots:ncr:mixin:unpublish-node'         => 'unpublish',
+        'gdbots:ncr:mixin:update-node'            => 'update',
     ];
 
     use PermissionValidatorTrait;
@@ -65,11 +48,11 @@ class PbjxPermissionValidator implements EventSubscriber, PbjxValidator
     {
         $schema = $message::schema();
         $permission = $schema->getCurie()->toString();
-        if ($schema->hasMixin(EventV1Mixin::SCHEMA_CURIE) || !$this->checker->isGranted($permission, $message)) {
+        if ($schema->hasMixin('gdbots:pbjx:mixin:event') || !$this->checker->isGranted($permission, $message)) {
             throw new AccessDeniedHttpException("You do not have [{$permission}] permission.");
         }
 
-        if ($schema->hasMixin(GetNodeBatchRequestV1Mixin::SCHEMA_CURIE)) {
+        if ($schema->hasMixin('gdbots:ncr:mixin:get-node-batch-request')) {
             $this->checkGetNodeBatchRequest($pbjxEvent, $message, $request);
             return;
         }
@@ -80,7 +63,7 @@ class PbjxPermissionValidator implements EventSubscriber, PbjxValidator
     protected function checkGetNodeBatchRequest(PbjxEvent $pbjxEvent, Message $message, Request $request): void
     {
         /** @var NodeRef[] $nodeRefs */
-        $nodeRefs = $message->get(GetNodeBatchRequestV1Mixin::NODE_REFS_FIELD, []);
+        $nodeRefs = $message->get('node_refs', []);
         $checked = [];
         $remove = [];
 
@@ -99,7 +82,7 @@ class PbjxPermissionValidator implements EventSubscriber, PbjxValidator
             return;
         }
 
-        $message->removeFromSet(GetNodeBatchRequestV1Mixin::NODE_REFS_FIELD, $remove);
+        $message->removeFromSet('node_refs', $remove);
     }
 
     protected function checkNodeRefs(PbjxEvent $pbjxEvent, Message $message, Request $request): void
@@ -115,7 +98,7 @@ class PbjxPermissionValidator implements EventSubscriber, PbjxValidator
 
         if ('gdbots' === $id->getVendor() && 'ncr' === $id->getPackage() && 'command' === $id->getCategory()) {
             $action = str_replace('-node', '', $id->getMessage());
-        } elseif ($id->getCurie()->toString() === GetNodeHistoryRequestV1::SCHEMA_CURIE) {
+        } elseif ($id->getCurie()->toString() === 'gdbots:ncr:request:get-node-history-request') {
             $action = 'get';
         } else {
             foreach (static::MIXINS_TO_ACTION as $mixin => $a) {
