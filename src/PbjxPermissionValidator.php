@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Gdbots\Bundle\IamBundle;
 
-use Gdbots\Bundle\PbjxBundle\Validator\PermissionValidatorTrait;
+use Gdbots\Bundle\PbjxBundle\PermissionValidatorTrait;
 use Gdbots\Pbj\Message;
 use Gdbots\Pbj\WellKnown\NodeRef;
 use Gdbots\Pbjx\DependencyInjection\PbjxValidator;

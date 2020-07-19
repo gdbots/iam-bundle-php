@@ -2,6 +2,11 @@
 This changelog references the relevant changes done in 2.x versions.
 
 
+## v2.1.0
+* Uses `"gdbots/iam": "^2.1"`
+* Uses `"gdbots/ncr-bundle": "^2.1"`
+
+
 ## v2.0.1
 * Use `TokenVerifier` instead of `IdTokenVerifier` in `Auth0JwtDecoder::decodeRS256` because we are validating an access token not an id token.
 
