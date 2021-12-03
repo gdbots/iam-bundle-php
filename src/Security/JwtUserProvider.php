@@ -16,7 +16,7 @@ use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
-abstract class JwtUserProvider implements UserProviderInterface
+class JwtUserProvider implements UserProviderInterface
 {
     protected Pbjx $pbjx;
     protected string $audience;
@@ -27,7 +27,12 @@ abstract class JwtUserProvider implements UserProviderInterface
         $this->audience = $audience;
     }
 
-    public function loadUserByUsername(string $username)
+    public function loadUserByIdentifier(string $identifier): UserInterface
+    {
+        throw new UsernameNotFoundException('Method not implemented');
+    }
+
+    public function loadUserByUsername(string $username): UserInterface
     {
         throw new UsernameNotFoundException('Method not implemented');
     }
