@@ -38,12 +38,12 @@ class PbjxPermissionVoter extends Voter
         $this->policyTtl = $policyTtl;
     }
 
-    protected function supports(string $attribute, $subject)
+    protected function supports(string $attribute, mixed $subject): bool
     {
         return $subject instanceof Message || preg_match('/^[a-z0-9-]+:([a-z0-9\.-]+:){1,2}[\w\/\.:-]*$/', $attribute);
     }
 
-    protected function voteOnAttribute(string $attribute, $subject, TokenInterface $token)
+    protected function voteOnAttribute(string $attribute, $subject, TokenInterface $token): bool
     {
         if (isset($this->checked[$attribute])) {
             return $this->checked[$attribute];

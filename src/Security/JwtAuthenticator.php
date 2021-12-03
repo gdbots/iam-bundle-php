@@ -14,9 +14,8 @@ use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
-use Symfony\Component\Security\Guard\AbstractGuardAuthenticator;
-
-class JwtAuthenticator extends AbstractGuardAuthenticator
+// fixme: AbstractGuardAuthenticator has been deprecated, find out what needs to be modified
+class JwtAuthenticator
 {
     protected JwtDecoder $decoder;
 
