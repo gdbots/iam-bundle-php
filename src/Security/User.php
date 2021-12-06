@@ -61,7 +61,7 @@ class User implements UserInterface, EquatableInterface
         return $this->node->get('title');
     }
 
-    public function getRoles()
+    public function getRoles(): array
     {
         return $this->roles;
     }
@@ -76,7 +76,7 @@ class User implements UserInterface, EquatableInterface
         return null;
     }
 
-    public function getUsername()
+    public function getUserIdentifier(): string
     {
         return $this->node->fget('_id');
     }
@@ -85,7 +85,7 @@ class User implements UserInterface, EquatableInterface
     {
     }
 
-    public function isEqualTo(UserInterface $user)
+    public function isEqualTo(UserInterface $user): bool
     {
         if (!$user instanceof self) {
             return false;

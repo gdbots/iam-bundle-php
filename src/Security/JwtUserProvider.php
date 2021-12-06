@@ -12,7 +12,7 @@ use Gdbots\Schemas\Iam\Request\GetUserRequestV1;
 use Gdbots\Schemas\Ncr\Request\GetNodeRequestV1;
 use Symfony\Component\Security\Core\Exception\DisabledException;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
-use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
+use Symfony\Component\Security\Core\Exception\UserNotFoundException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
@@ -29,12 +29,12 @@ class JwtUserProvider implements UserProviderInterface
 
     public function loadUserByIdentifier(string $identifier): UserInterface
     {
-        throw new UsernameNotFoundException('Method not implemented');
+        throw new UserNotFoundException('Method not implemented');
     }
 
     public function loadUserByUsername(string $username): UserInterface
     {
-        throw new UsernameNotFoundException('Method not implemented');
+        throw new UserNotFoundException('Method not implemented');
     }
 
     public function getAnonymousUser(): UserInterface
@@ -64,7 +64,7 @@ class JwtUserProvider implements UserProviderInterface
         throw new UnsupportedUserException(sprintf('Unsupported user class "%s"', get_class($user)));
     }
 
-    public function supportsClass(string $class)
+    public function supportsClass(string $class): bool
     {
         return $class === User::class;
     }
@@ -86,7 +86,7 @@ class JwtUserProvider implements UserProviderInterface
         } catch (DisabledException $de) {
             throw $de;
         } catch (\Throwable $e) {
-            throw new UsernameNotFoundException('You are not authorized to access this application (1).', $e->getCode(), $e);
+            throw new UserNotFoundException('You are not authorized to access this application (1).', $e->getCode(), $e);
         }
     }
 
@@ -112,7 +112,7 @@ class JwtUserProvider implements UserProviderInterface
         } catch (DisabledException $de) {
             throw $de;
         } catch (\Throwable $e) {
-            throw new UsernameNotFoundException('You are not authorized to access this application (2).', $e->getCode(), $e);
+            throw new UserNotFoundException('You are not authorized to access this application (2).', $e->getCode(), $e);
         }
     }
 }
