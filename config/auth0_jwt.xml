@@ -35,6 +35,7 @@
 
     <service id="gdbots_iam.jwt_authenticator" class="Gdbots\Bundle\IamBundle\Security\JwtAuthenticator">
       <argument type="service" id="gdbots_iam.auth0_jwt_decoder"/>
+      <argument type="service" id="pbjx"/>
       <argument>%env(AUTH0_AUDIENCE)%</argument>
     </service>
 
