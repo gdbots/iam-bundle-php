@@ -12,14 +12,18 @@ use Gdbots\Schemas\Pbjx\Enum\HttpCode;
 use Gdbots\Schemas\Pbjx\EnvelopeV1;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 class Auth0Controller extends AbstractController
 {
     protected Pbjx $pbjx;
+    protected TokenStorageInterface $tokenStorage;
 
-    public function __construct(Pbjx $pbjx)
+    public function __construct(Pbjx $pbjx, TokenStorageInterface $tokenStorage)
     {
         $this->pbjx = $pbjx;
+        $this->tokenStorage = $tokenStorage;
     }
 
     public function meAction(Request $request): Message
@@ -46,6 +50,15 @@ class Auth0Controller extends AbstractController
             ->set('etag', $node->get('etag'))
             ->set('message_ref', $node->generateMessageRef())
             ->set('message', $node);
+    }
+
+    protected function getUser(): ?UserInterface
+    {
+        if (null === $token = $this->tokenStorage->getToken()) {
+            return null;
+        }
+
+        return $token->getUser();
     }
 
     /**
