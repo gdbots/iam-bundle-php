@@ -25,29 +25,23 @@ use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 class JwtAuthenticator extends AbstractAuthenticator
 {
     protected JwtDecoder $decoder;
+    protected JwtUserProvider $jwtUserProvider;
+    protected Pbjx $pbjx;
     protected string $audience;
 
-    public function __construct(JwtDecoder $decoder, string $audience)
+    public function __construct(JwtDecoder $decoder, Pbjx $pbjx, string $audience)
     {
         $this->decoder = $decoder;
+        $this->pbjx = $pbjx;
         $this->audience = $audience;
+        $this->jwtUserProvider = new JwtUserProvider($this->pbjx, $this->audience);
     }
 
     public function authenticate(Request $request): Passport
     {
         $credentials = $request->headers->get('Authorization');
-        try {
-            $jwt = str_ireplace('bearer ', '', $credentials);
-            $payload = $this->decoder->decode($jwt);
-        } catch (\Throwable $e) {
-            throw new BadCredentialsException($e->getMessage(), Code::UNAUTHENTICATED, $e);
-        }
-
-        $ctxUserRef = $payload["{$this->audience}ctx_user_ref"];
-        $userRefParts = explode(':', $ctxUserRef);
-        $userId = end($userRefParts);
-
-        return new Passport(new UserBadge($userId), new CustomCredentials(
+        $userLoader = function ($credentials) { return $this->getUser($credentials, $this->jwtUserProvider); };
+        return new Passport(new UserBadge($credentials, $userLoader), new CustomCredentials(
             function ($credentials, UserInterface $user) {
                 return true;
             },
