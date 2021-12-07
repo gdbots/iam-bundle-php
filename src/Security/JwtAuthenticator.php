@@ -19,8 +19,8 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
-use Symfony\Component\Security\Http\Authenticator\Passport\Credentials\CustomCredentials;
 use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
+use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
 // fixme: needs review
 class JwtAuthenticator extends AbstractAuthenticator
 {
@@ -40,13 +40,8 @@ class JwtAuthenticator extends AbstractAuthenticator
     public function authenticate(Request $request): Passport
     {
         $credentials = $request->headers->get('Authorization');
-        $userLoader = function ($credentials) { return $this->getUser($credentials, $this->jwtUserProvider); };
-        return new Passport(new UserBadge($credentials, $userLoader), new CustomCredentials(
-            function ($credentials, UserInterface $user) {
-                return true;
-            },
-            $credentials
-        ));
+        $callable = function ($credentials) { return $this->getUser($credentials, $this->jwtUserProvider); };
+        return new SelfValidatingPassport(new UserBadge($credentials, $callable));
     }
 
     public function supports(Request $request): ?bool
