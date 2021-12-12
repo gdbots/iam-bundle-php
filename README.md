@@ -1,8 +1,6 @@
 iam-bundle-php
 =============
 
-[![Build Status](https://api.travis-ci.org/gdbots/iam-bundle-php.svg)](https://travis-ci.org/gdbots/iam-bundle-php)
-
 Symfony bundle that provides security implementations for the [gdbots/iam](https://github.com/gdbots/iam-php) library.
 
 
