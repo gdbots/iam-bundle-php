@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace Gdbots\Bundle\IamBundle\Security;
 
 use Gdbots\Pbj\Util\ClassUtil;
-use Gdbots\Pbjx\Pbjx;
 use Gdbots\Schemas\Pbjx\Enum\Code;
 use Gdbots\Schemas\Pbjx\Enum\HttpCode;
 use Gdbots\Schemas\Pbjx\EnvelopeV1;
@@ -22,13 +21,8 @@ use Symfony\Component\Security\Http\EntryPoint\AuthenticationEntryPointInterface
 
 class JwtAuthenticator extends AbstractAuthenticator implements AuthenticationEntryPointInterface
 {
-    protected JwtDecoder $decoder;
-    protected JwtUserProvider $userProvider;
-
-    public function __construct(JwtDecoder $decoder, JwtUserProvider $userProvider)
+    public function __construct(protected JwtDecoder $decoder, protected JwtUserProvider $userProvider)
     {
-        $this->decoder = $decoder;
-        $this->userProvider = $userProvider;
     }
 
     public function start(Request $request, AuthenticationException $authException = null): Response

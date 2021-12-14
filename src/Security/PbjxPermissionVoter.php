@@ -13,9 +13,6 @@ use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
 class PbjxPermissionVoter extends Voter
 {
-    protected Pbjx $pbjx;
-    protected CacheItemPoolInterface $cache;
-
     /**
      * Array of curies already checked for permission. Key is the curie of the
      * message, value is the result
@@ -26,16 +23,8 @@ class PbjxPermissionVoter extends Voter
 
     protected ?Policy $policy = null;
 
-    /**
-     * Amount of time in seconds the policy will be cached.
-     */
-    protected int $policyTtl;
-
-    public function __construct(Pbjx $pbjx, CacheItemPoolInterface $cache, int $policyTtl = 300)
+    public function __construct(protected Pbjx $pbjx, protected CacheItemPoolInterface $cache, protected int $policyTtl = 300)
     {
-        $this->pbjx = $pbjx;
-        $this->cache = $cache;
-        $this->policyTtl = $policyTtl;
     }
 
     protected function supports(string $attribute, mixed $subject): bool

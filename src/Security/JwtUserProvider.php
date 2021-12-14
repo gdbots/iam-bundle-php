@@ -18,13 +18,8 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
 
 class JwtUserProvider implements UserProviderInterface
 {
-    protected Pbjx $pbjx;
-    protected string $audience;
-
-    public function __construct(Pbjx $pbjx, string $audience)
+    public function __construct(protected Pbjx $pbjx, protected string $audience)
     {
-        $this->pbjx = $pbjx;
-        $this->audience = $audience;
     }
 
     public function supportsClass(string $class): bool

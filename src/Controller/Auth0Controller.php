@@ -17,13 +17,8 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 class Auth0Controller extends AbstractController
 {
-    protected Pbjx $pbjx;
-    protected TokenStorageInterface $tokenStorage;
-
-    public function __construct(Pbjx $pbjx, TokenStorageInterface $tokenStorage)
+    public function __construct(protected Pbjx $pbjx, protected TokenStorageInterface $tokenStorage)
     {
-        $this->pbjx = $pbjx;
-        $this->tokenStorage = $tokenStorage;
     }
 
     public function meAction(Request $request): Message
@@ -54,11 +49,7 @@ class Auth0Controller extends AbstractController
 
     protected function getUser(): ?UserInterface
     {
-        if (null === $token = $this->tokenStorage->getToken()) {
-            return null;
-        }
-
-        return $token->getUser();
+        return $this->tokenStorage->getToken()?->getUser();
     }
 
     /**

@@ -36,12 +36,8 @@ class PbjxPermissionValidator implements EventSubscriber, PbjxValidator
 
     use PermissionValidatorTrait;
 
-    protected AuthorizationCheckerInterface $checker;
-
-    public function __construct(RequestStack $requestStack, AuthorizationCheckerInterface $checker)
+    public function __construct(protected RequestStack $requestStack, protected AuthorizationCheckerInterface $checker)
     {
-        $this->requestStack = $requestStack;
-        $this->checker = $checker;
     }
 
     protected function checkPermission(PbjxEvent $pbjxEvent, Message $message, Request $request): void
