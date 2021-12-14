@@ -23,16 +23,12 @@ use Symfony\Component\Security\Http\EntryPoint\AuthenticationEntryPointInterface
 class JwtAuthenticator extends AbstractAuthenticator implements AuthenticationEntryPointInterface
 {
     protected JwtDecoder $decoder;
-    protected JwtUserProvider $jwtUserProvider;
-    protected Pbjx $pbjx;
-    protected string $audience;
+    protected JwtUserProvider $userProvider;
 
-    public function __construct(JwtDecoder $decoder, Pbjx $pbjx, string $audience)
+    public function __construct(JwtDecoder $decoder, JwtUserProvider $userProvider)
     {
         $this->decoder = $decoder;
-        $this->pbjx = $pbjx;
-        $this->audience = $audience;
-        $this->jwtUserProvider = new JwtUserProvider($this->pbjx, $this->audience);
+        $this->userProvider = $userProvider;
     }
 
     public function start(Request $request, AuthenticationException $authException = null): Response
@@ -57,7 +53,7 @@ class JwtAuthenticator extends AbstractAuthenticator implements AuthenticationEn
                 throw new BadCredentialsException($e->getMessage(), Code::UNAUTHENTICATED->value, $e);
             }
 
-            return $this->jwtUserProvider->loadUserByJwt($payload);
+            return $this->userProvider->loadUserByJwt($payload);
         }));
     }
 
