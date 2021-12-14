@@ -34,8 +34,8 @@ class Auth0Controller extends AbstractController
         if (!$user instanceof User) {
             return $envelope
                 ->set('ok', false)
-                ->set('code', Code::UNAUTHENTICATED)
-                ->set('http_code', HttpCode::HTTP_UNAUTHORIZED())
+                ->set('code', Code::UNAUTHENTICATED->value)
+                ->set('http_code', HttpCode::HTTP_UNAUTHORIZED)
                 ->set('error_name', 'AuthenticationRequired');
         }
 

@@ -14,15 +14,13 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
-use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Security\Core\User\UserProviderInterface;
-use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
-// fixme: needs review
-class JwtAuthenticator extends AbstractAuthenticator
+use Symfony\Component\Security\Http\EntryPoint\AuthenticationEntryPointInterface;
+
+class JwtAuthenticator extends AbstractAuthenticator implements AuthenticationEntryPointInterface
 {
     protected JwtDecoder $decoder;
     protected JwtUserProvider $jwtUserProvider;
@@ -37,11 +35,10 @@ class JwtAuthenticator extends AbstractAuthenticator
         $this->jwtUserProvider = new JwtUserProvider($this->pbjx, $this->audience);
     }
 
-    public function authenticate(Request $request): Passport
+    public function start(Request $request, AuthenticationException $authException = null): Response
     {
-        $credentials = $request->headers->get('Authorization');
-        $callable = function ($credentials) { return $this->getUser($credentials, $this->jwtUserProvider); };
-        return new SelfValidatingPassport(new UserBadge($credentials, $callable));
+        $exception = $authException ?: new AuthenticationException('Authentication Required');
+        return $this->onAuthenticationFailure($request, $exception);
     }
 
     public function supports(Request $request): ?bool
@@ -49,68 +46,40 @@ class JwtAuthenticator extends AbstractAuthenticator
         return $request->headers->has('Authorization');
     }
 
-    public function getCredentials(Request $request)
+    public function authenticate(Request $request): Passport
     {
-        return $request->headers->get('Authorization');
+        $credentials = $request->headers->get('Authorization');
+        return new SelfValidatingPassport(new UserBadge($credentials, function ($credentials) {
+            try {
+                $jwt = str_ireplace('bearer ', '', $credentials);
+                $payload = $this->decoder->decode($jwt);
+            } catch (\Throwable $e) {
+                throw new BadCredentialsException($e->getMessage(), Code::UNAUTHENTICATED->value, $e);
+            }
+
+            return $this->jwtUserProvider->loadUserByJwt($payload);
+        }));
     }
 
-    public function getUser($credentials, UserProviderInterface $userProvider)
-    {
-        if (null === $credentials) {
-            // The token header was empty, authentication fails with HTTP Status
-            // Code 401 "Unauthorized"
-            return null;
-        }
-
-        if (!$userProvider instanceof JwtUserProvider) {
-            return null;
-        }
-
-        try {
-            $jwt = str_ireplace('bearer ', '', $credentials);
-            $payload = $this->decoder->decode($jwt);
-        } catch (\Throwable $e) {
-            throw new BadCredentialsException($e->getMessage(), Code::UNAUTHENTICATED, $e);
-        }
-
-        return $userProvider->loadUserByJwt($payload);
-    }
-
-    public function checkCredentials($credentials, UserInterface $user)
-    {
-        return true;
-    }
-
-    public function onAuthenticationSuccess(Request $request, TokenInterface $token, $providerKey): ?Response
+    public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
         return null;
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
-        $code = $exception->getCode() > 0 ? $exception->getCode() : Code::UNAUTHENTICATED;
+        $code = $exception->getCode() > 0 ? $exception->getCode() : Code::UNAUTHENTICATED->value;
         $envelope = EnvelopeV1::create()
             ->set('ok', false)
             ->set('code', $code)
-            ->set('http_code', HttpCode::HTTP_UNAUTHORIZED())
+            ->set('http_code', HttpCode::HTTP_UNAUTHORIZED)
             ->set('error_name', ClassUtil::getShortName($exception))
             ->set('error_message', $exception->getMessage());
 
-        return new JsonResponse($envelope->toArray(), HttpCode::HTTP_UNAUTHORIZED, [
+        return new JsonResponse($envelope->toArray(), $envelope->fget('http_code'), [
             'Content-Type'       => 'application/json',
-            'ETag'               => $envelope->get('etag'),
-            'x-pbjx-envelope-id' => (string)$envelope->get('envelope_id'),
+            'ETag'               => $envelope->fget('etag'),
+            'x-pbjx-envelope-id' => $envelope->fget('envelope_id'),
         ]);
-    }
-
-    public function start(Request $request, AuthenticationException $authException = null)
-    {
-        $exception = $authException ?: new AuthenticationException('Authentication Required');
-        return $this->onAuthenticationFailure($request, $exception);
-    }
-
-    public function supportsRememberMe(): bool
-    {
-        return false;
     }
 }

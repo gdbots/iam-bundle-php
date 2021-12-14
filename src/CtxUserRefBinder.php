@@ -13,7 +13,7 @@ final class CtxUserRefBinder implements EventSubscriber, PbjxBinder
 {
     private TokenStorageInterface $tokenStorage;
 
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             'gdbots:pbjx:mixin:command.bind' => ['bind', 20000],

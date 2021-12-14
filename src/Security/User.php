@@ -66,19 +66,9 @@ class User implements UserInterface, EquatableInterface
         return $this->roles;
     }
 
-    public function getPassword()
-    {
-        return null;
-    }
-
-    public function getSalt()
-    {
-        return null;
-    }
-
     public function getUserIdentifier(): string
     {
-        return $this->node->fget('_id');
+        return $this->getNodeRef()->toString();
     }
 
     public function eraseCredentials()
@@ -91,12 +81,16 @@ class User implements UserInterface, EquatableInterface
             return false;
         }
 
-        return $this->node->equals($user->node);
+        if ($this->getUserIdentifier() !== $user->getUserIdentifier()) {
+            return false;
+        }
+
+        return $this->node->fget('etag') === $user->getNode()->fget('etag');
     }
 
     public function isEnabled(): bool
     {
-        if (NodeStatus::PUBLISHED !== $this->node->fget('status')) {
+        if (NodeStatus::PUBLISHED->value !== $this->node->fget('status')) {
             return false;
         }
 

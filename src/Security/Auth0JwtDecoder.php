@@ -70,7 +70,7 @@ class Auth0JwtDecoder implements JwtDecoder
                 return $tokenVerifier->verify($jwt);
             } catch (\Throwable $e) {
                 $message = str_replace($key, '***', $e->getMessage());
-                $exception = new InvalidTokenException($message, Code::UNAUTHENTICATED, $e);
+                $exception = new InvalidTokenException($message, Code::UNAUTHENTICATED->value, $e);
             }
         }
 

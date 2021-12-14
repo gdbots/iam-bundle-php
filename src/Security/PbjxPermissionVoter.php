@@ -43,7 +43,7 @@ class PbjxPermissionVoter extends Voter
         return $subject instanceof Message || preg_match('/^[a-z0-9-]+:([a-z0-9\.-]+:){1,2}[\w\/\.:-]*$/', $attribute);
     }
 
-    protected function voteOnAttribute(string $attribute, $subject, TokenInterface $token): bool
+    protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
     {
         if (isset($this->checked[$attribute])) {
             return $this->checked[$attribute];

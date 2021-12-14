@@ -27,19 +27,24 @@ class JwtUserProvider implements UserProviderInterface
         $this->audience = $audience;
     }
 
+    public function supportsClass(string $class): bool
+    {
+        return $class === User::class;
+    }
+
+    public function refreshUser(UserInterface $user): UserInterface
+    {
+        throw new UnsupportedUserException(sprintf('Unsupported user class "%s"', $user::class));
+    }
+
     public function loadUserByIdentifier(string $identifier): UserInterface
     {
-        throw new UserNotFoundException('Method not implemented');
+        return $this->loadByNodeRef(NodeRef::fromString($identifier));
     }
 
     public function loadUserByUsername(string $username): UserInterface
     {
-        throw new UserNotFoundException('Method not implemented');
-    }
-
-    public function getAnonymousUser(): UserInterface
-    {
-        return new AnonymousUser();
+        return $this->loadUserByIdentifier($username);
     }
 
     public function loadUserByJwt(array $payload): UserInterface
@@ -56,17 +61,7 @@ class JwtUserProvider implements UserProviderInterface
             return $this->loadByEmail($payload['email'], $ctxTenantId);
         }
 
-        return $this->getAnonymousUser();
-    }
-
-    public function refreshUser(UserInterface $user)
-    {
-        throw new UnsupportedUserException(sprintf('Unsupported user class "%s"', get_class($user)));
-    }
-
-    public function supportsClass(string $class): bool
-    {
-        return $class === User::class;
+        return new AnonymousUser();
     }
 
     protected function loadByNodeRef(NodeRef $nodeRef, ?string $tenantId = null): User
