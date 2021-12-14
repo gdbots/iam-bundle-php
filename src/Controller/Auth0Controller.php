@@ -12,14 +12,13 @@ use Gdbots\Schemas\Pbjx\Enum\HttpCode;
 use Gdbots\Schemas\Pbjx\EnvelopeV1;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 class Auth0Controller extends AbstractController
 {
-    protected Pbjx $pbjx;
-
-    public function __construct(Pbjx $pbjx)
+    public function __construct(protected Pbjx $pbjx, protected TokenStorageInterface $tokenStorage)
     {
-        $this->pbjx = $pbjx;
     }
 
     public function meAction(Request $request): Message
@@ -30,8 +29,8 @@ class Auth0Controller extends AbstractController
         if (!$user instanceof User) {
             return $envelope
                 ->set('ok', false)
-                ->set('code', Code::UNAUTHENTICATED)
-                ->set('http_code', HttpCode::HTTP_UNAUTHORIZED())
+                ->set('code', Code::UNAUTHENTICATED->value)
+                ->set('http_code', HttpCode::HTTP_UNAUTHORIZED)
                 ->set('error_name', 'AuthenticationRequired');
         }
 
@@ -46,6 +45,11 @@ class Auth0Controller extends AbstractController
             ->set('etag', $node->get('etag'))
             ->set('message_ref', $node->generateMessageRef())
             ->set('message', $node);
+    }
+
+    protected function getUser(): ?UserInterface
+    {
+        return $this->tokenStorage->getToken()?->getUser();
     }
 
     /**

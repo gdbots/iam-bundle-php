@@ -12,29 +12,34 @@ use Gdbots\Schemas\Iam\Request\GetUserRequestV1;
 use Gdbots\Schemas\Ncr\Request\GetNodeRequestV1;
 use Symfony\Component\Security\Core\Exception\DisabledException;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
-use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
+use Symfony\Component\Security\Core\Exception\UserNotFoundException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
 class JwtUserProvider implements UserProviderInterface
 {
-    protected Pbjx $pbjx;
-    protected string $audience;
-
-    public function __construct(Pbjx $pbjx, string $audience)
+    public function __construct(protected Pbjx $pbjx, protected string $audience)
     {
-        $this->pbjx = $pbjx;
-        $this->audience = $audience;
     }
 
-    public function loadUserByUsername(string $username)
+    public function supportsClass(string $class): bool
     {
-        throw new UsernameNotFoundException('Method not implemented');
+        return $class === User::class;
     }
 
-    public function getAnonymousUser(): UserInterface
+    public function refreshUser(UserInterface $user): UserInterface
     {
-        return new AnonymousUser();
+        throw new UnsupportedUserException(sprintf('Unsupported user class "%s"', $user::class));
+    }
+
+    public function loadUserByIdentifier(string $identifier): UserInterface
+    {
+        return $this->loadByNodeRef(NodeRef::fromString($identifier));
+    }
+
+    public function loadUserByUsername(string $username): UserInterface
+    {
+        return $this->loadUserByIdentifier($username);
     }
 
     public function loadUserByJwt(array $payload): UserInterface
@@ -51,17 +56,7 @@ class JwtUserProvider implements UserProviderInterface
             return $this->loadByEmail($payload['email'], $ctxTenantId);
         }
 
-        return $this->getAnonymousUser();
-    }
-
-    public function refreshUser(UserInterface $user)
-    {
-        throw new UnsupportedUserException(sprintf('Unsupported user class "%s"', get_class($user)));
-    }
-
-    public function supportsClass(string $class)
-    {
-        return $class === User::class;
+        return new AnonymousUser();
     }
 
     protected function loadByNodeRef(NodeRef $nodeRef, ?string $tenantId = null): User
@@ -81,7 +76,7 @@ class JwtUserProvider implements UserProviderInterface
         } catch (DisabledException $de) {
             throw $de;
         } catch (\Throwable $e) {
-            throw new UsernameNotFoundException('You are not authorized to access this application (1).', $e->getCode(), $e);
+            throw new UserNotFoundException('You are not authorized to access this application (1).', $e->getCode(), $e);
         }
     }
 
@@ -107,7 +102,7 @@ class JwtUserProvider implements UserProviderInterface
         } catch (DisabledException $de) {
             throw $de;
         } catch (\Throwable $e) {
-            throw new UsernameNotFoundException('You are not authorized to access this application (2).', $e->getCode(), $e);
+            throw new UserNotFoundException('You are not authorized to access this application (2).', $e->getCode(), $e);
         }
     }
 }

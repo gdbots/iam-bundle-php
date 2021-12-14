@@ -61,42 +61,36 @@ class User implements UserInterface, EquatableInterface
         return $this->node->get('title');
     }
 
-    public function getRoles()
+    public function getRoles(): array
     {
         return $this->roles;
     }
 
-    public function getPassword()
+    public function getUserIdentifier(): string
     {
-        return null;
-    }
-
-    public function getSalt()
-    {
-        return null;
-    }
-
-    public function getUsername()
-    {
-        return $this->node->fget('_id');
+        return $this->getNodeRef()->toString();
     }
 
     public function eraseCredentials()
     {
     }
 
-    public function isEqualTo(UserInterface $user)
+    public function isEqualTo(UserInterface $user): bool
     {
         if (!$user instanceof self) {
             return false;
         }
 
-        return $this->node->equals($user->node);
+        if ($this->getUserIdentifier() !== $user->getUserIdentifier()) {
+            return false;
+        }
+
+        return $this->node->fget('etag') === $user->getNode()->fget('etag');
     }
 
     public function isEnabled(): bool
     {
-        if (NodeStatus::PUBLISHED !== $this->node->fget('status')) {
+        if (NodeStatus::PUBLISHED->value !== $this->node->fget('status')) {
             return false;
         }
 

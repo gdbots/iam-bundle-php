@@ -11,9 +11,7 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInt
 
 final class CtxUserRefBinder implements EventSubscriber, PbjxBinder
 {
-    private TokenStorageInterface $tokenStorage;
-
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             'gdbots:pbjx:mixin:command.bind' => ['bind', 20000],
@@ -22,9 +20,8 @@ final class CtxUserRefBinder implements EventSubscriber, PbjxBinder
         ];
     }
 
-    public function __construct(TokenStorageInterface $tokenStorage)
+    public function __construct(private TokenStorageInterface $tokenStorage)
     {
-        $this->tokenStorage = $tokenStorage;
     }
 
     public function bind(PbjxEvent $pbjxEvent): void
