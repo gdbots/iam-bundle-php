@@ -27,7 +27,7 @@
     <service id="gdbots_iam.auth0_jwt_decoder" class="Gdbots\Bundle\IamBundle\Security\Auth0JwtDecoder">
       <argument type="service" id="cache.app"/>
       <argument>%env(AUTH0_AUDIENCE)%</argument>
-      <argument>https://%env(AUTH0_DOMAIN)%/</argument>
+      <argument>%env(AUTH0_DOMAIN)%</argument>
       <argument type="collection">
         <argument>%env(AUTH0_CURRENT_SIGNING_SECRET)%</argument>
         <argument>%env(AUTH0_NEXT_SIGNING_SECRET)%</argument>

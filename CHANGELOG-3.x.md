@@ -2,6 +2,9 @@
 This changelog references the relevant changes done in 3.x versions.
 
 
+## v3.1.1
+* Use latest auth0-php library.
+
 ## v3.1.0
 * Updates for symfony 6.4.x deprecations and typehint changes.
 
