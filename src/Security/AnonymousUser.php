@@ -12,7 +12,7 @@ class AnonymousUser implements UserInterface
         return ['IS_AUTHENTICATED_ANONYMOUSLY'];
     }
 
-    public function eraseCredentials()
+    public function eraseCredentials(): void
     {
     }
 

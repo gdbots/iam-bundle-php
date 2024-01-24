@@ -30,7 +30,7 @@ class User implements UserInterface, EquatableInterface
 
         $schema = $this->node::schema();
 
-        if ($schema->hasMixin('gdbots:iam:mixin:user') && $this->node->get('is_staff')) {
+        if ($schema->hasMixin('gdbots:iam:mixin:user') && $this->node->fget('is_staff')) {
             $this->roles[] = 'ROLE_USER';
             $this->roles[] = 'ROLE_STAFF';
         }
@@ -58,7 +58,7 @@ class User implements UserInterface, EquatableInterface
 
     public function getDisplayName(): ?string
     {
-        return $this->node->get('title');
+        return $this->node->fget('title');
     }
 
     public function getRoles(): array
@@ -71,7 +71,7 @@ class User implements UserInterface, EquatableInterface
         return $this->getNodeRef()->toString();
     }
 
-    public function eraseCredentials()
+    public function eraseCredentials(): void
     {
     }
 
@@ -95,7 +95,7 @@ class User implements UserInterface, EquatableInterface
         }
 
         if ($this->node::schema()->hasMixin('gdbots:iam:mixin:user')) {
-            return !$this->node->get('is_blocked');
+            return !$this->node->fget('is_blocked');
         }
 
         // apps are always enabled when published (for now)

@@ -42,7 +42,7 @@ class Auth0Controller extends AbstractController
         }
 
         return $envelope
-            ->set('etag', $node->get('etag'))
+            ->set('etag', $node->fget('etag'))
             ->set('message_ref', $node->generateMessageRef())
             ->set('message', $node);
     }

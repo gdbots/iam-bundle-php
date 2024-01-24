@@ -102,7 +102,7 @@ class PbjxPermissionVoterTest extends TestCase
         $this->assertEquals($expected, $this->voter->vote($token, null, $attributes), $message);
     }
 
-    public function getDataSamples(): array
+    public static function getDataSamples(): array
     {
         return [
             [
