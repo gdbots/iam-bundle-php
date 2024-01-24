@@ -6,6 +6,7 @@ namespace Gdbots\Bundle\IamBundle\Security;
 use Auth0\SDK\Auth0;
 use Auth0\SDK\Configuration\SdkConfiguration;
 use Auth0\SDK\Exception\InvalidTokenException;
+use Auth0\SDK\Token;
 use Gdbots\Schemas\Pbjx\Enum\Code;
 use Psr\Cache\CacheItemPoolInterface;
 
@@ -36,6 +37,22 @@ class Auth0JwtDecoder implements JwtDecoder
 
     public function decode(string $jwt): array
     {
+        $header = json_decode(base64_decode(explode('.', $jwt, 2)[0]), true) ?: [];
+        $alg = $header['alg'] ?? 'unknown';
+
+        switch ($alg) {
+            case Token::ALGO_RS256:
+                $this->auth0->configuration()->setTokenAlgorithm(Token::ALGO_RS256);
+                break;
+
+            case Token::ALGO_HS256:
+                $this->auth0->configuration()->setTokenAlgorithm(Token::ALGO_HS256);
+                break;
+
+            default:
+                throw new InvalidTokenException('Invalid token algorithm.');
+        }
+
         $exception = null;
         foreach ($this->keys as $key) {
             $this->auth0->configuration()->setClientSecret($key);

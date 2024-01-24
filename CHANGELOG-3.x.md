@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 3.x versions.
 
 
+## v3.1.2
+* Use latest auth0-php library but also ensure correct algo is used when decoding.
+
+
 ## v3.1.1
 * Use latest auth0-php library.
 
