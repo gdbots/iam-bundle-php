@@ -25,7 +25,7 @@ class JwtAuthenticator extends AbstractAuthenticator implements AuthenticationEn
     {
     }
 
-    public function start(Request $request, AuthenticationException $authException = null): Response
+    public function start(Request $request, ?AuthenticationException $authException = null): Response
     {
         $exception = $authException ?: new AuthenticationException('Authentication Required');
         return $this->onAuthenticationFailure($request, $exception);
