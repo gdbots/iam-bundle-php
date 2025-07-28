@@ -35,14 +35,16 @@ class Auth0Controller extends AbstractController
         }
 
         $node = $user->getNode();
+        $etags = [$node->fget('etag')];
         if ($user->isEnabled() && $node->has('roles')) {
             foreach ($this->getUsersRoles($node) as $nodeRef => $role) {
                 $envelope->addToMap('derefs', $nodeRef, $role);
+                $etags[] = $role->fget('etag');
             }
         }
 
         return $envelope
-            ->set('etag', $node->fget('etag'))
+            ->set('etag', md5(json_encode($etags)))
             ->set('message_ref', $node->generateMessageRef())
             ->set('message', $node);
     }
