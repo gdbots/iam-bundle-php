@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 4.x versions.
 
 
+## v4.0.1
+* Include roles in etag generation in `\Gdbots\Bundle\IamBundle\Controller\Auth0Controller::meAction`.
+
+
 ## v4.0.0
 __BREAKING CHANGES__
 
