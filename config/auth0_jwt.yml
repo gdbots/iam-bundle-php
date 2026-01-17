@@ -1,0 +1,67 @@
+parameters:
+  env(AUTH0_AUDIENCE): ''
+  env(AUTH0_DOMAIN): ''
+  env(AUTH0_CURRENT_SIGNING_SECRET): ''
+  env(AUTH0_NEXT_SIGNING_SECRET): ''
+  env(IAM_POLICY_TTL): 300
+
+# This provider requires "auth0/auth0-php" library.
+services:
+  _defaults:
+    public: false
+
+  gdbots_iam.auth0_controller:
+    class: Gdbots\Bundle\IamBundle\Controller\Auth0Controller
+    public: true
+    arguments:
+      - '@pbjx'
+      - '@security.token_storage'
+    calls:
+      - setContainer: [ '@service_container' ]
+
+  gdbots_iam.auth0_jwt_decoder:
+    class: Gdbots\Bundle\IamBundle\Security\Auth0JwtDecoder
+    arguments:
+      - '@cache.app'
+      - '%env(AUTH0_AUDIENCE)%'
+      - '%env(AUTH0_DOMAIN)%'
+      - - '%env(AUTH0_CURRENT_SIGNING_SECRET)%'
+        - '%env(AUTH0_NEXT_SIGNING_SECRET)%'
+
+  gdbots_iam.jwt_authenticator:
+    class: Gdbots\Bundle\IamBundle\Security\JwtAuthenticator
+    arguments:
+      - '@gdbots_iam.auth0_jwt_decoder'
+      - '@gdbots_iam.jwt_user_provider'
+
+  gdbots_iam.jwt_user_provider:
+    class: Gdbots\Bundle\IamBundle\Security\JwtUserProvider
+    arguments:
+      - '@pbjx'
+      - '%env(AUTH0_AUDIENCE)%'
+
+  gdbots_iam.pbjx_permission_voter:
+    class: Gdbots\Bundle\IamBundle\Security\PbjxPermissionVoter
+    arguments:
+      - '@pbjx'
+      - '@cache.app'
+      - '%env(int:IAM_POLICY_TTL)%'
+    tags:
+      - { name: security.voter }
+
+  gdbots_iam.ctx_user_ref_binder:
+    class: Gdbots\Bundle\IamBundle\CtxUserRefBinder
+    arguments:
+      - '@security.token_storage'
+    tags:
+      - { name: pbjx.event_subscriber }
+      - { name: pbjx.binder }
+
+  gdbots_iam.pbjx_permission_validator:
+    class: Gdbots\Bundle\IamBundle\PbjxPermissionValidator
+    arguments:
+      - '@request_stack'
+      - '@security.authorization_checker'
+    tags:
+      - { name: pbjx.event_subscriber }
+      - { name: pbjx.validator }

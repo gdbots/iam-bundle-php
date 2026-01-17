@@ -1,0 +1,3 @@
+auth0_me:
+  path: /me
+  controller: gdbots_iam.auth0_controller::meAction

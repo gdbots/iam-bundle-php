@@ -9,6 +9,7 @@ use Gdbots\Pbjx\Pbjx;
 use Gdbots\Schemas\Ncr\Request\GetNodeBatchRequestV1;
 use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
 class PbjxPermissionVoter extends Voter
@@ -32,7 +33,7 @@ class PbjxPermissionVoter extends Voter
         return $subject instanceof Message || preg_match('/^[a-z0-9-]+:([a-z0-9\.-]+:){1,2}[\w\/\.:-]*$/', $attribute);
     }
 
-    protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
+    protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token, ?Vote $vote = null): bool
     {
         if (isset($this->checked[$attribute])) {
             return $this->checked[$attribute];
