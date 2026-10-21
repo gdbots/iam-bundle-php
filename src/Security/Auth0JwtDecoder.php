@@ -8,6 +8,7 @@ use Auth0\SDK\Configuration\SdkConfiguration;
 use Auth0\SDK\Exception\InvalidTokenException;
 use Auth0\SDK\Token;
 use Gdbots\Schemas\Pbjx\Enum\Code;
+use GuzzleHttp\Psr7\HttpFactory;
 use Psr\Cache\CacheItemPoolInterface;
 
 class Auth0JwtDecoder implements JwtDecoder
@@ -20,15 +21,20 @@ class Auth0JwtDecoder implements JwtDecoder
      * @var string[]
      */
     protected array $keys;
-
     protected Auth0 $auth0;
 
     public function __construct(CacheItemPoolInterface $cache, string $audience, string $domain, array $keys)
     {
+        $psr17Factory = new HttpFactory();
         $this->auth0 = new Auth0([
-            'strategy' => SdkConfiguration::STRATEGY_API,
-            'audience' => [$audience],
-            'domain'   => $domain,
+            'strategy'            => SdkConfiguration::STRATEGY_API,
+            'audience'            => [$audience],
+            'domain'              => $domain,
+            // yes, this is a cluster fuck but for security reasons we disable http discovery at the app level
+            'httpRequestFactory'  => $psr17Factory,
+            'httpResponseFactory' => $psr17Factory,
+            'httpStreamFactory'   => $psr17Factory,
+            'httpClient'          => new \GuzzleHttp\Client(),
         ]);
 
         $this->auth0->configuration()->setTokenCache($cache);
@@ -57,7 +63,7 @@ class Auth0JwtDecoder implements JwtDecoder
         foreach ($this->keys as $key) {
             $this->auth0->configuration()->setClientSecret($key);
             try {
-                $token = $this->auth0->decode(token: $jwt, tokenType: \Auth0\SDK\Token::TYPE_ACCESS_TOKEN);
+                $token = $this->auth0->decode(token: $jwt, tokenType: Token::TYPE_ACCESS_TOKEN);
                 return $token->toArray();
             } catch (\Throwable $e) {
                 $message = str_replace($key, '***', $e->getMessage());
